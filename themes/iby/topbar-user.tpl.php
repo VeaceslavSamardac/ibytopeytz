@@ -3,10 +3,10 @@
   $account = user_load($user->uid);
 
   if (iby_forums_recent_new()) {
-    $style = "background: transparent url('/" . path_to_theme() . "/images/recent_blink.gif') left 7px no-repeat;";
+    $style = "background: transparent url('/" . drupal_get_path('theme', 'iby') . "/images/recent_blink.gif') left 7px no-repeat;";
   }
   else {
-    $style = "background: transparent url('/" . path_to_theme() . "images/recent_none.gif') left 7px no-repeat;";
+    $style = "background: transparent url('/" . drupal_get_path('theme', 'iby') . "images/recent_none.gif') left 7px no-repeat;";
   }  
 ?>
 <div id="topbar-user">
