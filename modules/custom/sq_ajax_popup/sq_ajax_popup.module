@@ -1,0 +1,67 @@
+<?php
+/** 
+ * @file 
+ * Place for actual hooks code for the Socialsquare Ajax Popup Module
+ */ 
+
+function sq_ajax_popup_init() {
+  drupal_add_library('system', 'drupal.ajax');
+  drupal_add_library('system', 'jquery.form');
+
+  if(!isset($javascript['sites/all/modules/sq_ajax_popup/js/script.js']))
+    drupal_add_js('sites/all/modules/sq_ajax_popup/js/script.js');
+
+  if(!isset($javascript['sites/all/modules/sq_ajax_popup/js/jquery.tools.overlay.min.js']))
+    drupal_add_js('sites/all/modules/sq_ajax_popup/js/jquery.tools.overlay.min.js');
+
+  if(!isset($javascript['sites/all/modules/sq_ajax_popup/js/jquery.tools.tooltip.min.js']))
+    drupal_add_js('sites/all/modules/sq_ajax_popup/js/jquery.tools.tooltip.min.js');
+
+  $profiles = wysiwyg_profile_load_all();
+  foreach($profiles as $profile) {
+    wysiwyg_load_editor($profile);
+    $theme = wysiwyg_get_editor_themes($profile, (isset($profile->settings['theme']) ? $profile->settings['theme'] : ''));
+
+    // Add plugin settings (first) for this input format.
+    wysiwyg_add_plugin_settings($profile);
+    // Add profile settings for this input format.
+    wysiwyg_add_editor_settings($profile, $theme);
+    wysiwyg_load_editor($profile);
+  }
+
+}
+
+function sq_ajax_popup_preprocess_html(&$variables) {
+  if(isset($_GET['show_ajax']) && $_GET['show_ajax']) {
+    array_unshift($variables['theme_hook_suggestions'], $variables['theme_hook_suggestions'][0]."__ajax");
+    array_push($variables['theme_hook_suggestions'], "html__ajax"); // This will probably never be reached?
+    //$variables['show_ajax_page'] = true;
+  }
+}
+
+function sq_ajax_popup_preprocess_page(&$variables) {
+  //if((isset($_GET['show_ajax']) && $_GET['show_ajax']) || (isset($variables['show_ajax_page']) && $variables['show_ajax_page'])) {
+  if(isset($_GET['show_ajax']) && $_GET['show_ajax']) {
+    array_unshift($variables['theme_hook_suggestions'], $variables['theme_hook_suggestions'][0]."__ajax");
+    //array_unshift($variables['theme_hook_suggestions'], "page__ajax"); // This will probably never be reached?
+  }
+}
+
+function sq_ajax_popup_theme($existing, $type, $theme, $path) {
+  $themes_path = $_SERVER['DOCUMENT_ROOT']."/".sqtools_default_theme_path()."/";
+
+  $module_templates_path = drupal_get_path('module', 'iby_forums')."/templates";
+
+  if(file_exists($themes_path."html--ajax.tpl.php"))
+    $templates['html__ajax'] = array('template' => "html--ajax");
+  else $templates['html__ajax'] = array('path' => $module_templates_path, 'template' => "html--ajax");
+
+  if(file_exists($themes_path."page--ajax.tpl.php"))
+    $templates['page__ajax'] = array('template' => "page--ajax");
+  else $templates['page__ajax'] = array('path' => $module_templates_path, 'template' => "page--ajax");
+
+  if(file_exists($themes_path."page--node--ajax.tpl.php"))
+    $templates['page__node__ajax'] = array('template' => "page--node--ajax");
+
+  return $templates;
+}

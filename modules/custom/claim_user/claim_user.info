@@ -1,0 +1,5 @@
+name = Claim User
+description = Claim User
+package = Other
+core = 7.x
+files[] = claim_user.module

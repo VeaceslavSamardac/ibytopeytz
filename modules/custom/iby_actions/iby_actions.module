@@ -1,0 +1,334 @@
+<?php
+function iby_actions_trigger_info() {
+  return array('iby_actions' => array(
+                                      'insert_tips_tricks_problem' => array('label' => t('A new Problem is added to Tips & Tricks')),
+                                      'insert_tips_tricks_solution' => array('label' => t('A new Solution is added to Tips & Tricks')),
+                                      'insert_challenges_contribution' => array('label' => t('A new Contibution is added to Challenges')),
+                                      'insert_contribution_comment' => array('label' => t('A new comment is added to a Challenge Contibution')),
+                                      'insert_vip_comment' => array('label' => t('A new comment is added to a VIP Room Topic')),
+                                      'insert_forum_topic' => array('label' => t('A new Topic is added to Forums')),
+                                      'insert_topic_comment' => array('label' => t('A new comment is added to a Forum Topic')),
+                                      'change_to_coloplast_employee' => array('label' => t('Someone claimed to be a Coloplast employee'))
+                                      ),
+               );
+}
+
+function iby_actions_tokens($type, $tokens, array $data = array(), array $options = array()) {
+  $new_tokens = array();
+  
+  $new_tokens['[iby:site_name]'] = variable_get('site_name', "Innovation By You");
+  $new_tokens['[iby:name]'] = (isset($data['iby']['name']) ? $data['iby']['name'] : "" );
+  $new_tokens['[iby:subject]'] = (isset($data['iby']['subject']) ? $data['iby']['subject'] : "" );
+  $new_tokens['[iby:recipient:mail]'] = (isset($data['iby']['recipient']) ? $data['iby']['recipient'] : "" );
+  $new_tokens['[iby:challenge:name]'] = (isset($data['iby']['challenge']['name']) ? $data['iby']['challenge']['name'] : "" ); //This is for Challenges
+  $new_tokens['[iby:challenge:link]'] = (isset($data['iby']['challenge']['link']) ? $data['iby']['challenge']['link'] : "" );
+  $new_tokens['[iby:contribution:name]'] = (isset($data['iby']['contribution']['name']) ? $data['iby']['contribution']['name'] : "" );
+  $new_tokens['[iby:contribution:link]'] = (isset($data['iby']['contribution']['link']) ? $data['iby']['contribution']['link'] : "" );
+  $new_tokens['[iby:vip:name]'] = (isset($data['iby']['vip']['name']) ? $data['iby']['vip']['name'] : "" ); //This is for VIP Rooms
+  $new_tokens['[iby:vip:link]'] = (isset($data['iby']['vip']['link']) ? $data['iby']['vip']['link'] : "" );
+  $new_tokens['[iby:solution:name]'] = (isset($data['iby']['solution']['name']) ? $data['iby']['solution']['name'] : "" );
+  $new_tokens['[iby:solution:link]'] = (isset($data['iby']['solution']['link']) ? $data['iby']['solution']['link'] : "" );
+  $new_tokens['[iby:forum:name]'] = (isset($data['iby']['forum']['name']) ? $data['iby']['forum']['name'] : "" ); //This is for Forums (aka chat_forums)
+  $new_tokens['[iby:forum:link]'] = (isset($data['iby']['forum']['link']) ? $data['iby']['forum']['link'] : "" );
+  $new_tokens['[iby:topic:name]'] = (isset($data['iby']['topic']['name']) ? $data['iby']['topic']['name'] : "" );
+  $new_tokens['[iby:topic:link]'] = (isset($data['iby']['topic']['link']) ? $data['iby']['topic']['link'] : "" );
+  $new_tokens['[iby:problem:name]'] = (isset($data['iby']['problem']['name']) ? $data['iby']['problem']['name'] : "" ); //This is for Tips & Tricks
+  $new_tokens['[iby:problem:link]'] = (isset($data['iby']['problem']['link']) ? $data['iby']['problem']['link'] : "" );
+  $new_tokens['[iby:user:name]'] = (isset($data['iby']['user']['name']) ? $data['iby']['user']['name'] : "" ); //This is for employee claims
+  $new_tokens['[iby:user:link]'] = (isset($data['iby']['user']['link']) ? $data['iby']['user']['link'] : "" );
+
+  return $new_tokens;
+}
+
+
+function _iby_actions_execute_actions(&$aid, $context=false, $node=NULL, &$account_uids) {
+  if(!$context) $context = array('iby'=>array());
+
+  if(is_array($account_uids)) {
+    foreach($account_uids as $account_uid) {
+
+      $account = user_load($account_uid);
+
+      $personal_name = sqtools_get_lang_value($account->field_personal_name);
+  
+      if($_SERVER['SERVER_NAME'] == "iby.localhost") $account->mail = "dan@techba.se";
+  
+      $context['iby']['name'] = (($personal_name[0]['value'])?$personal_name[0]['value']:$account->name);
+      $context['iby']['username'] = $account->name;
+      $context['iby']['recipient'] = $account->mail;
+
+      $result = actions_do($aid, $node, $context);
+    }
+  }
+}
+
+/* Hook up the triggers needed */
+function iby_actions_user_update(&$edit, $account, $category) {
+  if(isset($edit['#employee_claim']) && $edit['#employee_claim']) {
+
+    $profile_value = sqtools_get_lang_value($account->field_new_profile);
+    $profile = $profile_value[0]['value'];
+      
+    if($profile != "coloplast")
+      _iby_actions_user_triggers_handler("coloplast_employee", $account);
+  }
+}
+
+function iby_actions_user_insert(&$edit, $account, $category) {
+  if(isset($edit['#employee_claim']) && $edit['#employee_claim']) {
+    _iby_actions_user_triggers_handler("coloplast_employee", $account);
+  }
+}
+
+function iby_actions_user_presave(&$edit, $account, $category) {
+  global $user;
+  if(!sqtools_is_admin($user) && isset($edit['field_new_profile'])) {
+    $edit_profile_value = sqtools_get_lang_value($edit['field_new_profile']);
+    $edit_profile = $edit_profile_value[0]['value'];
+
+    if($edit_profile == "coloplast") {
+      $edit['field_new_profile']['und'][0]['value'] = 'other';
+      $edit['#employee_claim'] = true;
+    }
+  }
+}
+
+function iby_actions_node_insert($node) {
+  _iby_actions_handle_trigger("node", $node);
+}
+
+function iby_actions_comment_insert($comment) {
+  _iby_actions_handle_trigger("comment", $comment);
+}
+
+function _iby_actions_handle_trigger($type, $object) {
+  if(($type == "node") || ($type == "comment")) {
+    
+    $object->iby_tid = _iby_forums_get_tid_by_nid($object->nid);
+    $object->iby_ptid = _iby_forums_get_parent_tid_by_nid($object->nid);
+
+  } else return;
+
+
+  $parent_forum = taxonomy_term_load($object->iby_ptid);
+  $slug_name = StringTools::slug($parent_forum->name, "_");
+
+  $function_name = "_iby_actions_".$slug_name."_triggers_handler";
+  if(function_exists($function_name)) $function_name($type, $object);
+}
+
+function _iby_actions_user_triggers_handler($type, &$account) {
+  if($type == "coloplast_employee") {
+    $context = array();
+
+    $context['iby']['user']['name'] = $account->name;
+    $context['iby']['user']['link'] = "http://".$_SERVER['SERVER_NAME'].'/user/'.$account->uid;
+
+    $aids = trigger_get_assigned_actions('change_to_coloplast_employee');
+
+//    $rid = db_select('role', 'r')->fields('r', array('rid'))->condition('r.name', 'administrator')->execute()->fetchField();
+//
+//    if($rid) {
+//      $query = db_select('users', 'u');
+//      $query->fields('u', array('uid'));
+//      $query->join('users_roles', 'ur', 'ur.rid = '.$rid.' AND ur.uid = u.uid');
+//      $res = $query->execute();
+//
+//      if($res) {
+//        foreach($res as $row) $account_uids[] = $row->uid;
+//      }
+
+      if(count($aids)) {
+        foreach($aids as $aid) {
+          $result = actions_do($aid, $null, $context);
+          //_iby_actions_execute_actions($aid, $context, NULL, $account_uids);
+        }
+      }
+      //}
+  }
+}
+
+function _iby_actions_tips_tricks_triggers_handler($type, &$object) {
+  $aids = array();
+  $account_uids = array();
+  $context = array();
+
+  if($type == "comment") {
+    $node = node_load($object->nid);
+    $comment = comment_load($object->cid);
+    $context['iby']['solution']['name'] = (($comment->subject) ? $comment->subject : t("[No subject]"));
+    $aids = trigger_get_assigned_actions('insert_tips_tricks_solution');
+
+  } else {
+    $node = $object;
+    $aids = trigger_get_assigned_actions('insert_tips_tricks_problem');
+  }
+
+  $context['iby']['problem']['name'] = $node->title;
+  $context['iby']['problem']['link'] = "http://".$_SERVER['SERVER_NAME'].'/node/'.$node->nid;
+
+  if($object->cid) {
+    $context['iby']['problem']['link'] .= "?page=".comment_get_display_page($object->cid, 'forum')."#comment-".$object->cid;
+  }
+
+  $rid = db_select('role', 'r')->fields('r', array('rid'))->condition('r.name', 'administrator')->execute()->fetchField();
+
+  if($rid) {
+    $query = db_select('users', 'u');
+    $query->fields('u', array('uid'));
+    $query->join('users_roles', 'ur', 'ur.rid = '.$rid.' AND ur.uid = u.uid');
+    $res = $query->execute();
+
+    if($res) {
+      foreach($res as $row) $account_uids[] = $row->uid;
+    }
+
+    if(count($aids)) {
+      foreach($aids as $aid) {
+        _iby_actions_execute_actions($aid, $context, $node, $account_uids);
+      }
+    }
+  }
+}
+
+
+function _iby_actions_challenges_triggers_handler($type, &$object) {
+  $aids = array();
+  $account_uids = array();
+  $context = array();
+  $flags_args = array('flag_type' => 'follow');
+
+  if($type == "comment") {
+    $flags_args += array('entity_ids' => array($object->nid), 'entity_type' => 'node');
+    $node = node_load($object->nid);
+    $aids = trigger_get_assigned_actions('insert_contribution_comment');
+
+  } else {
+    $node = $object;
+    $query = db_select('forum_index', 'f');
+    $query->fields('f', array('tid'));
+    $query->condition('f.nid', $node->nid);
+    $tid = $query->execute()->fetchField(0);
+    $flags_args += array('entity_ids' => array($tid), 'entity_type' => 'taxonomy_term');
+    $aids = trigger_get_assigned_actions('insert_challenges_contribution');
+  }
+  
+  $forum = taxonomy_term_load($object->iby_tid);
+
+  $context['iby']['challenge']['name'] = $forum->name;
+  $context['iby']['challenge']['link'] = "http://".$_SERVER['SERVER_NAME'].'/forum/'.$forum->tid."#challenges".$node->nid;
+
+  $context['iby']['contribution']['name'] = $node->title;
+  $context['iby']['contribution']['link'] = "http://".$_SERVER['SERVER_NAME'].'/node/'.$node->nid;
+
+  if($object->cid) {
+    $context['iby']['contribution']['link'] .= "?page=".comment_get_display_page($object->cid, $node->type)."#comment-".$object->cid;
+  }
+
+  $flags = sq_flags_api_get_multiple($flags_args);
+
+  if($flags) {
+    foreach($flags as $flag) $account_uids[] = $flag->uid;
+  }
+
+  if(count($aids)) {
+    foreach($aids as $aid) {
+      _iby_actions_execute_actions($aid, $context, $node, $account_uids);
+    }
+  }
+}
+
+
+
+function _iby_actions_vip_rooms_triggers_handler($type, &$object) {
+  $aids = array();
+  $account_uids = array();
+  $context = array();
+  $flags_args = array('flag_type' => 'follow');
+
+  if($type == "comment") {
+    $flags_args += array('entity_ids' => array($object->nid), 'entity_type' => 'node');
+    $node = node_load($object->nid);
+    $aids = trigger_get_assigned_actions('insert_vip_comment');
+
+  } else {
+    $node = $object;
+    $query = db_select('forum_index', 'f');
+    $query->fields('f', array('tid'));
+    $query->condition('f.nid', $node->nid);
+    $tid = $query->execute()->fetchField(0);
+    $flags_args += array('entity_ids' => array($tid), 'entity_type' => 'taxonomy_term');
+    $aids = trigger_get_assigned_actions('insert_vip_contribution');
+  }
+  
+  $forum = taxonomy_term_load($object->iby_tid);
+
+  $context['iby']['vip']['name'] = $forum->name;
+  $context['iby']['vip']['link'] = "http://".$_SERVER['SERVER_NAME'].'/forum/'.$forum->tid."#vip-rooms".$node->nid;
+
+  $context['iby']['topic']['name'] = $node->title;
+  $context['iby']['topic']['link'] = "http://".$_SERVER['SERVER_NAME'].'/node/'.$node->nid;
+
+  if($object->cid) {
+    $context['iby']['topic']['link'] .= "?page=".comment_get_display_page($object->cid, $node->type)."#comment-".$object->cid;
+  }
+
+  $flags = sq_flags_api_get_multiple($flags_args);
+
+  if($flags) {
+    foreach($flags as $flag) $account_uids[] = $flag->uid;
+  }
+
+  if(count($aids)) {
+    foreach($aids as $aid) {
+      _iby_actions_execute_actions($aid, $context, $node, $account_uids);
+    }
+  }
+}
+
+
+
+function _iby_actions_chat_forums_triggers_handler($type, &$object) {
+  $aids = array();
+  $account_uids = array();
+  $context = array();
+  $flags_args = array('flag_type' => 'follow');
+
+  if($type == "comment") {
+    $flags_args += array('entity_ids' => array($object->nid), 'entity_type' => 'node');
+    $node = node_load($object->nid);
+    $aids = trigger_get_assigned_actions('insert_topic_comment');
+
+  } else {
+    $node = $object;
+    $query = db_select('forum_index', 'f');
+    $query->fields('f', array('tid'));
+    $query->condition('f.nid', $node->nid);
+    $tid = $query->execute()->fetchField(0);
+    $flags_args += array('entity_ids' => array($tid), 'entity_type' => 'taxonomy_term');
+    $aids = trigger_get_assigned_actions('insert_forum_topic');
+  }
+
+  $forum = taxonomy_term_load($object->iby_tid);
+
+  $context['iby']['forum']['name'] = $forum->name;
+  $context['iby']['forum']['link'] = "http://".$_SERVER['SERVER_NAME'].'/forum/'.$forum->tid."#chat-forums".$node->nid;
+
+  $context['iby']['topic']['name'] = $node->title;
+  $context['iby']['topic']['link'] = "http://".$_SERVER['SERVER_NAME'].'/node/'.$node->nid;
+
+  if($object->cid) {
+    $context['iby']['topic']['link'] .= "?page=".comment_get_display_page($object->cid, $node->type)."#comment-".$object->cid;
+  }
+
+  $flags = sq_flags_api_get_multiple($flags_args);
+
+  foreach($flags as $flag) $account_uids[] = $flag->uid;
+  
+  if(count($aids)) {
+    foreach($aids as $aid) {
+      _iby_actions_execute_actions($aid, $context, $node, $account_uids);
+    }
+  }
+}
+

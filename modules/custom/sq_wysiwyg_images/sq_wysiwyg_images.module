@@ -1,0 +1,12 @@
+<?php
+/** 
+ * @file 
+ * Place for hooks code for the Socialsquare WYSIWYG Image Module
+ */ 
+
+/**
+ * Implements hook_wysiwyg_plugin().
+ */
+function sq_wysiwyg_images_wysiwyg_include_directory($type) {
+  return $type;
+}

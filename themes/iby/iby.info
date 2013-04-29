@@ -1,0 +1,68 @@
+name = Innovation by you
+description = A custom theme, created for Coloplast - Innovation by you
+core = 7.x
+engine = phptemplate
+
+stylesheets[all][] = css/style.css
+stylesheets[all][] = css/ibyforum.css
+
+dependencies[] = sq_flags_api;
+dependencies[] = iby_forums;
+
+; drupal 7 defaults
+
+;php = DRUPAL_MINIMUM_PHP
+
+scripts[] = js/script.js
+scripts[] = js/challenges.img.sliders.js
+scripts[] = js/jquery.tools.min.js
+
+;regions[header] = Header
+;regions[highlighted] = Highlighted
+;regions[help] = Help
+;regions[content] = Content
+;regions[sidebar_first] = Left sidebar
+;regions[sidebar_second] = Right sidebar
+;regions[footer] = Footer
+
+features[] = logo
+;features[] = name
+;features[] = slogan
+;features[] = node_user_picture
+;features[] = comment_user_picture
+features[] = favicon
+features[] = main_menu
+features[] = secondary_menu
+
+;screenshot = screenshot.png
+
+
+; bartik settings
+
+;stylesheets[all][] = css/layout.css
+;stylesheets[all][] = css/style.css
+;stylesheets[all][] = css/colors.css
+;stylesheets[print][] = css/print.css
+
+;regions[header] = Header
+;regions[help] = Help
+;regions[page_top] = Page top
+;regions[page_bottom] = Page bottom
+;regions[highlighted] = Highlighted
+
+;regions[featured] = Featured
+;regions[content] = Content
+;regions[sidebar_first] = Sidebar first
+;regions[sidebar_second] = Sidebar second
+
+;regions[triptych_first] = Triptych first
+;regions[triptych_middle] = Triptych middle
+;regions[triptych_last] = Triptych last
+
+;regions[footer_firstcolumn] = Footer first column
+;regions[footer_secondcolumn] = Footer second column
+;regions[footer_thirdcolumn] = Footer third column
+;regions[footer_fourthcolumn] = Footer fourth column
+;regions[footer] = Footer
+
+;settings[shortcut_module_link] = 0

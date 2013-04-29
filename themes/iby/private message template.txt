@@ -1,0 +1,9 @@
+Hi [privatemsg_message:recipient],
+
+This is an automatic reminder from [site:name]. You have received a new private message from [current-user:name].
+
+To read your message, follow this link:
+[site:url]/messages
+
+If you don't want to receive these emails again, change your preferences here:
+[site:url]/user

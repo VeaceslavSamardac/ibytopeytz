@@ -1,0 +1,7 @@
+name = WYSIWYG Easy Images
+description = Enables a simple way to upload an image, that immediately get insert into tinyMCE
+package = Modules created by Socialsquare
+core = 7.x
+dependencies[] = wysiwyg
+files[] = sq_wysiwyg_images.module
+scripts[] = js/script.js

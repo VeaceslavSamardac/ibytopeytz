@@ -1,0 +1,106 @@
+<?php
+
+/**
+ * Implements hook_block_info().
+ */
+function custom_blocks_block_info() { 
+  $blocks['custom_blocks_user'] = array(
+    'info' => t('Custom block - User login'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+  
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function custom_blocks_block_view($type, $edit = array()) {  
+  $block = array();
+  $block['subject'] = '';
+  switch ($type) {
+    case "custom_blocks_user":
+      if (!user_is_logged_in()) {
+        $block['content'] = theme('custom_blocks_user', array());
+      }
+    break;
+  }
+  return $block;
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function custom_blocks_theme() {
+  $themes = array();
+  $blocks = custom_blocks_block_info();
+  foreach ($blocks as $k => $v) {    
+    $themes[$k] = array(
+      'variables' => array(),
+    );
+  }  
+  
+  $themes['custom_blocks_user_login_form'] = array(
+    'render element' => 'form',
+  );
+  
+  $themes['custom_blocks_user_pass_form'] = array(
+    'render element' => 'form',
+  );
+  return $themes;
+}
+
+/*****  THEME  ********/
+function theme_custom_blocks_user($variables = array()) {
+  $output = '';
+  drupal_add_js(drupal_get_path('module', 'custom_blocks'). '/js/custom_blocks_user.js');
+  module_load_include('inc', 'user', 'user.pages');
+  $output .= '<div class="custom_blocks_user_title">'. l('Sign in here ›','user/login', array('attributes' => array('onclick' => 'return false;'))) .'</div>';
+  $output .= '<div class="custom_blocks_user_login">';
+  $login_form = drupal_get_form('user_login');  
+  $login_form['name']['#default_value'] = '';
+  $login_form['name']['#title'] = t('Enter your username');
+  $login_form['pass']['#title'] = t('Enter your password');
+  $login_form['actions']['submit']['#value'] = t('Sign in');
+  $login_form['#theme'][] = 'custom_blocks_user_login_form';    
+  unset($login_form['name']['#value']);
+  $output .= drupal_render($login_form);
+  $output .= '</div>';
+  $output .= '<div class="custom_blocks_user_pass">';
+  $pass_form = drupal_get_form('user_pass');  
+  $pass_form['#theme'][] = 'custom_blocks_user_pass_form';
+  
+  $output .= drupal_render($pass_form);
+  $output .= "</div>";
+  
+  return $output;
+}
+
+function theme_custom_blocks_user_login_form($variables) {
+  $output = '';
+  $form = $variables['form'];
+  unset($form['actions']['lost_password']);    
+  $output .= drupal_render_children($form);
+  $output .= '<div class="custom_blocks_user_login_forgot">' . t('Forgot your password? !link', array('!link' => l(t('Click here &rsaquo;'), 'user/password', array('html' => TRUE, 'attributes' => array('class' => array('custom_blocks_user_login_link'), 'onclick' => 'return false;')))));
+  $output .= '</div>';
+  $output .= '<div class="custom_blocks_user_register">' . t('New member? !link', array('!link' => l(t('Sign up here &rsaquo;'), 'user/register', array('html' => TRUE, 'attributes' => array('class' => array('custom_blocks_user_register_link'))))));
+  $output .= '</div>';
+  return $output;
+}
+
+function theme_custom_blocks_user_pass_form($variables) {
+  $output = '';
+  $form = $variables['form'];
+  $output .= drupal_render_children($form);
+  $output .= '<div class="custom_blocks_user_login_forgot">' . t('Login? !link', array('!link' => l(t('Click here &rsaquo;'), 'user/login', array('html' => TRUE, 'attributes' => array('class' => array('custom_blocks_user_pass_link'), 'onclick' => 'return false;')))));  $output .= '</div>';
+  return $output;
+}
+
+function custom_blocks_form_user_pass_alter(&$form) {
+  $form['#submit'][] = 'custom_blocks_form_user_pass_submit';
+}
+
+function custom_blocks_form_user_pass_submit(&$form, &$form_state) {
+  $form_state['redirect'] = 'user/forgot';
+}
+

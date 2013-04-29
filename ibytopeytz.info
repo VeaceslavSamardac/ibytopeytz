@@ -1,0 +1,73 @@
+name = IbyToPeytz
+description = Default installation profile for IbyToPeytz
+core = 7.x
+version = 7.x-1.0
+;theme = mox
+
+
+; core
+
+dependencies[] = block
+dependencies[] = contact
+dependencies[] = contextual
+dependencies[] = dblog
+dependencies[] = field_ui
+dependencies[] = help
+dependencies[] = list
+dependencies[] = menu
+dependencies[] = path
+dependencies[] = rdf
+dependencies[] = search
+dependencies[] = shortcut
+dependencies[] = taxonomy
+dependencies[] = translation
+dependencies[] = toolbar
+
+
+; contributed
+
+dependencies[] = apachesolr
+dependencies[] = better_exposed_filters
+dependencies[] = ctools
+dependencies[] = calendar
+dependencies[] = date
+dependencies[] = date_popup_authored
+dependencies[] = diff
+dependencies[] = features
+;dependencies[] = features_extra
+dependencies[] = facetapi
+dependencies[] = field_group
+dependencies[] = file_entity
+dependencies[] = link
+dependencies[] = media
+dependencies[] = media_derivatives
+dependencies[] = menu_block
+dependencies[] = metatags_quick
+dependencies[] = module_filter
+dependencies[] = references
+dependencies[] = panels
+;dependencies[] = panels_extras
+dependencies[] = pathauto
+dependencies[] = references_dialog
+dependencies[] = special_menu_items
+dependencies[] = strongarm
+dependencies[] = token
+dependencies[] = variable
+dependencies[] = views
+dependencies[] = wysiwyg
+dependencies[] = libraries
+
+
+; custom: re-usable modules
+
+;dependencies[] = nodelist
+
+
+; custom: project-specific modules
+
+;dependencies[] = 
+
+
+; features
+
+;sl_features[] = 

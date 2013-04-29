@@ -1,0 +1,5 @@
+name = IBY Actions
+description = Creates the actions for notifications and for the triggers
+package = Modules created by Socialsquare
+core = 7.x
+files[] = iby_actions.module

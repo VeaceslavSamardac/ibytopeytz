@@ -1,0 +1,25 @@
+.iby_search { padding: 9px 10px 0 10px; height: 24px; }
+
+.footerContentWrapper { height: 255px; }
+.footerContent { height: 115px; }
+
+input { filter: none; }
+.rounded-button a { filter: none; }
+
+.challenges-grid .challenges-name { height: 40px; }
+
+.box-shadow { box-shadow: none; background-color: #fff; }
+
+/*
+#add-topic-content { background-color: #fff; }
+
+.add-comment-content { height: 490px; }
+.comment-box { height: 480px; }
+*/
+
+.chat-forums-large-box { background-color: #F8F6F1; }
+.tips-tricks-large-box { background-color: #F8F6F1; }
+.challenges-large-box { background-color: #F8F6F1; }
+.vip-rooms-large-box { background-color: #F8F6F1; }
+
+body.front .navi { margin-top: 3px; }

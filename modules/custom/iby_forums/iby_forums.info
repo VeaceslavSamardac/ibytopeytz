@@ -1,0 +1,10 @@
+name = Innovation By You Forums
+description = Does a lot of magic to make the Drupal default forum module behave more advanced
+package = Modules created by Socialsquare
+core = 7.x
+files[] = iby_forum_extender.module
+files[] = iby_forum_extender.install
+
+stylesheets[all][] = css/ibyforum.css
+
+dependencies[] = sq_flags_api

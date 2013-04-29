@@ -1,0 +1,550 @@
+<?php
+/** 
+ * @file 
+ * Socialsquare Tools module code
+ */
+
+function sqtools_default_theme() {
+  $theme_key = variable_get('theme_default','none');
+  $themes = list_themes();
+  return $themes[$theme_key];
+}
+
+function sqtools_default_theme_path() {
+  $theme = sqtools_default_theme();
+  return str_replace("/".$theme->name.".info", "", $theme->filename);
+}
+
+function sqtools_get_lang_value($languaged_array) {
+  $lang = 'und';
+
+  if(isset($languaged_array['#language'])) $lang = $languaged_array['#language'];
+  elseif(is_array($languaged_array)) {
+    $langs = array_keys($languaged_array);
+    $lang = array_shift($langs);
+  }
+
+  if(!isset($languaged_array[$lang])) return;
+
+  return $languaged_array[$lang];
+}
+
+function sqtools_is_admin($account=false) {
+  if(!$account) {
+    global $user;
+    $account = &$user;
+  }
+
+  if($account->uid == 1) return true;
+  if(in_array('administrator', array_values($account->roles))) return true;
+
+  return false;
+}
+
+
+  /*********************************************************************/
+  /* StringTools is part of Speedbase                                  */
+  /* Speedbase is a PHP framework created by Dan Larsen                */
+  /*********************************************************************/
+  /* This file and all other parts of Speedbase is free to use as is.  */
+  /* Dan Larsen can not be held liable for any use or misuse of the    */
+  /* code, so please check things before using in live environments ;) */
+  /*********************************************************************/
+  /* This class gives you a lot of string manipulation tools.          */
+  /*********************************************************************/
+
+class StringTools {
+  public static function makePossessive($str) {
+    if(substr($str, -1) == "s") return $str."'";
+    else return $str."'s";
+  }
+
+  public static function strToPlural($str) {
+    if(mb_substr($str, -1) == "y") $str = mb_substr($str, 0, -1)."ies";
+    elseif(mb_substr($str, -1) == "s") $str = $str."es";
+    else $str = $str."s";
+    return $str;
+  }
+
+  public static function strToSingle($str) {
+    if(mb_substr($str, -3) == "ses") $str = mb_substr($str, 0, -2);
+    elseif(mb_substr($str, -3) == "ies") $str = mb_substr($str, 0, -3)."y";
+    elseif(mb_substr($str, -1) == "s") $str = mb_substr($str, 0, -1);
+    return $str;
+  }
+
+  // $onlyForward defines wether or not, next word may come before the last found word 
+  public static function compare($str1, $str2, $onlyForward=true) {
+    $words1 = explode(" ", $str1);
+    $words2 = explode(" ", $str2);
+
+    if(count($words1) > count($words2)) {
+      $baseWords = $words1;
+      $searchString = $str2;
+    } else {
+      $baseWords = $words2;
+      $searchString = $str1;
+    }
+
+    $percentage1 = (100 / count($words1));
+    $percentage2 = (100 / count($words2));
+    $percentage = (($percentage1 + $percentage2) / 2);
+    //$percentage = (100 / count($baseWords));
+    
+    unset($words1);unset($words2); unset($str1); unset($str2);
+
+    $finalPercentage = 0;
+
+    foreach($baseWords as $word) {
+      $matchPos = false;
+      if(preg_match("/\b(".preg_quote($word, "/").")\b.*/is", $searchString, $match, PREG_OFFSET_CAPTURE)) {
+        $matchPos = $match[1][1];
+        $finalPercentage += $percentage;
+
+      } elseif(preg_match("/\b(".preg_quote($word, "/").").*/is", $searchString, $match, PREG_OFFSET_CAPTURE)) {
+        $matchPos = $match[1][1];
+        $finalPercentage += ($percentage * 0.5);
+      }
+
+      if($matchPos) $finalPercentage -= ($percentage * 0.25);
+
+      if($onlyForward && ($matchPos !== false)) $searchString = substr($searchString, ($matchPos + strlen($word)) );
+
+    }
+
+    return $finalPercentage;
+  }
+
+  public static function timeLeft($endstamp, $startstamp=false, $showShort=false) {
+    if(!$startstamp) $startstamp = time();
+    return StringTools::timeAgo($endstamp, $startstamp, $showShort);
+  }
+
+  public static function timeAgo($startstamp, $endstamp=false, $showShort=false) {
+    // 60 = minute
+    // 3600 = hour
+    // 86400 = day
+    // 604800 = week
+    // 2592000 = month (30 days)
+    // 31536000 = year (365 days)
+
+    if(!$endstamp) $endstamp = time();
+    $timediff = ($endstamp - $startstamp);
+
+    if($timediff < 1) return;
+
+    if($timediff >= 31536000) {
+      $years = floor($timediff / 31536000);
+      return $years." year".(($years > 1)?"s":"");
+  
+    } elseif($timediff >= 2592000) {
+      $months = floor($timediff / 2592000);
+      return $months." month".(($months > 1)?"s":"");
+  
+    } elseif($timediff >= 604800) {
+      $weeks = floor($timediff / 604800);
+      return $weeks." week".(($weeks > 1)?"s":"");
+  
+    } elseif($timediff >= 86400) {
+      $days = floor($timediff / 86400);
+      return $days." day".(($days > 1)?"s":"");
+  
+    } elseif($timediff >= 3600) {
+      $hours = floor($timediff / 3600);
+      return $hours." hour".(($hours > 1)?"s":"");
+  
+    } elseif($timediff >= 60) {
+      $minutes = floor($timediff / 60);
+      return $minutes.(($showShort)?" min":" minute").(($minutes > 1)?"s":"");
+  
+    } else {
+      return $timediff.(($showShort)?" sec":" second").(($seconds > 1)?"s":"");
+    }
+  }
+
+  // This will only return the parts that match from the beginning
+  public static function getMatchingPart($str1, $str2) {
+    $minLength = min(strlen($str1), strlen($str2));
+
+    $match = "";
+    for($i=1 ; $i <= $minLength ; $i++) {
+      if(substr($str1, 0, $i) == substr($str2, 0, $i)) $match = substr($str1, 0, $i);
+      else return trim($match);
+    }
+
+    return trim($match);
+  }
+
+  public static function polishToUnderscore($str) {
+    return preg_replace("/([A-Z])/e", "'_'.mb_strtolower('\\1')", lcfirst($str));
+  }
+
+  public static function underscoreToPolish($str) {
+    return preg_replace("/(_[a-z])/e", "mb_strtoupper(mb_substr('\\1',1))", $str);
+  }
+
+  public static function randomString($length=12, $chars=false) {
+    if(!$chars || !is_array($chars)) $chars = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz";
+    $chars = str_split($chars);
+
+    $charsCount = (count($chars)-1);
+    $str = "";
+    for($i=0 ; $i < intval($length) ; $i++) $str .= $chars[mt_rand(0, ($charsCount-1))];
+    return $str;
+  }
+
+
+  public static function wordCounts($str) {
+    $str = preg_replace("/(\r\n|\r|\n)/is", " ", $str);
+    $all_words = preg_split("/\s+|;|\//is", $str);
+    $words = array();
+    foreach($all_words as $word) {
+      $word = preg_replace("/^[,\.]+/", " ", trim($word));
+      $word = preg_replace("/[,\.]+$/", " ", trim($word));
+      $word = trim(preg_replace("/[\(\)\[\]]+/", "", $word));
+      if(strlen($word) > 1) {
+        $word = mb_strtolower($word);
+        if(!isset($words[$word])) $words[$word] = 1;
+        else $words[$word]++;
+      }
+    }
+    arsort($words);
+    return $words;
+  }
+
+  public static function shorten($str, $length=200, $append='...') {
+    if(!is_int($length)) $length = 55;
+
+    $nl2br = false;
+    if(preg_match("/<\s*(\/|)\s*br\s*(\/|)\s*>/", $str) ) {
+      $str = trim( preg_replace("/(\s*\n\s*){3,}/s", "\n", preg_replace("/<\s*(\/|)\s*br\s*(\/|)\s*>/s", "\n", $str) ) );
+      $nl2br = true;
+    }
+
+    if(mb_strlen($str) > $length) {
+      $str = mb_substr($str, 0, ($length-mb_strlen($append)));
+      $lspacepos = mb_strrpos($str, " ");
+      if($lspacepos > $length) $str = mb_substr($str, 0, $length);
+      elseif($lspacepos > 0) $str = mb_substr($str, 0, $lspacepos);
+      if(in_array(mb_substr($str, -1), array(".",","))) $str = mb_substr($str, 0, -1);
+      $str .= $append;
+    }
+
+    if($nl2br) return nl2br($str);
+    else return $str;
+  }
+
+  public static function striptags($str, $allowed_tags=false) {
+    //$str = mb_convert_encoding((string)$str, "ISO-8859-1");
+    $str = preg_replace("/<\s*(\/|)\s*p\s*>/", "\n", $str);
+    $str = trim( strip_tags( preg_replace("/<\s*(\/|)\s*br\s*(\/|)\s*>/", "\n", $str), $allowed_tags ) );
+    $str = trim(preg_replace("/(\r\n|\r|\n)+/s", "\n", $str));
+    return nl2br($str);
+  }
+
+  public static function safeHtmlEncoding($str) {
+    return htmlentities(preg_replace("/(&[a-z0-9]+;)/ei", "html_entity_decode('$1')", $str));
+  }
+
+  public static function urlSlug($urlStr, $space="_") {
+    $urlStr = self::slug($urlStr, $space, false);
+    $count = 0;
+
+    do {
+      $urlStr = preg_replace("/^\d+/", "", $urlStr, -1, $count);
+      $urlStr = preg_replace("/^".preg_quote($space,"/")."/", "", $urlStr);
+    } while($count);
+
+    do {
+      $urlStr = preg_replace("/\d+$/", "", $urlStr, -1, $count);
+      $urlStr = preg_replace("/".preg_quote($space,"/")."$/", "", $urlStr);
+    } while($count);
+
+    return $urlStr;
+  }
+
+  public static function slug($str, $space="_", $loose=false) {
+    //$special_chars = "ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿRS";
+    $special_chars = array("À"=>"A","Á"=>"A","Â"=>"A","Ã"=>"A","Ä"=>"A","Å"=>"A","Æ"=>"A","Ç"=>"C","È"=>"E","É"=>"E","Ê"=>"E","Ë"=>"E","Ì"=>"I","Í"=>"I","Î"=>"I","Ï"=>"I","Ð"=>"D","Ñ"=>"N","Ò"=>"O","Ó"=>"O","Ô"=>"O","Õ"=>"O","Ö"=>"O","Ø"=>"O","Ù"=>"U","Ú"=>"U","Û"=>"U","Ü"=>"U","Ý"=>"Y","Þ"=>"a","ß"=>"b","à"=>"a","á"=>"a","â"=>"a","ã"=>"a","ä"=>"a","å"=>"a","æ"=>"a","ç"=>"c","è"=>"e","é"=>"e","ê"=>"e","ë"=>"e","ì"=>"i","í"=>"i","î"=>"i","ï"=>"i","ð"=>"o","ñ"=>"n","ò"=>"o","ó"=>"o","ô"=>"o","õ"=>"o","ö"=>"o","ø"=>"o","ù"=>"u","ú"=>"u","û"=>"u","ü"=>"u","ý"=>"y","þ"=>"d","ÿ"=>"y");
+
+    $str = mb_strtolower($str);
+    $str = preg_replace("/[\/\\-'_\|\"\:;\.,]+/s", $space, $str);
+    if($loose) {
+      $str = preg_replace("/[^a-z0-9".implode("",array_keys($special_chars)).$space."]/s", $space, $str);
+    } else {
+      $str = str_replace(array_keys($special_chars), array_values($special_chars), $str);
+      $str = preg_replace("/[^a-z0-9".addslashes($space)."]/s", $space, $str);
+    }
+    $str = preg_replace('/['.addslashes($space).']+/i', $space, $str);
+    if(mb_substr($str,0,1) == $space) $str = mb_substr($str,1);
+    if(mb_substr($str,-1) == $space) $str = mb_substr($str,0,-1);
+    return $str;
+  }
+
+  public static function stringToWords($str) {
+    return preg_split("/\s+|,|\.|;/is", str_replace(array('"', "'"), " ", $str));
+  }
+
+  public static function roughTrim($str) {
+    if(preg_match("/^[\s\r\n,\.\-_;\!\"#%&\/\\\(\)=\?]*(.*?)[\s\r\n\-_\"#%&\/\\\(\)=]*$/is", $str, $match)) {
+      return trim($match[1]);
+    }
+    return $str;
+  }
+}
+
+
+
+  /*********************************************************************/
+  /* UrlTools is part of Speedbase                                     */
+  /* Speedbase is a PHP framework created by Dan Larsen                */
+  /*********************************************************************/
+  /* This file and all other parts of Speedbase is free to use as is.  */
+  /* Dan Larsen can not be held liable for any use or misuse of the    */
+  /* code, so please check things before using in live environments ;) */
+  /*********************************************************************/
+  /* This class gives you a lot of url manipulation tools.             */
+  /*********************************************************************/
+
+class UrlTools {
+
+  public static function getRequestUri() {
+    $uri = ((defined("XHTML_STRICT") && XHTML_STRICT) ? str_replace("&","&amp;",$_SERVER['REQUEST_URI']) : $_SERVER['REQUEST_URI']);
+    return ((mb_substr($uri,0,1) != "/")?"/":"").$uri;
+  }
+
+  public static function getSeperator() {
+    return ((defined("XHTML_STRICT") && XHTML_STRICT)?"&amp;":"&");
+  }
+
+  public static function clean($url) {
+    return self::build(self::parse($url));
+  }
+
+  public static function parse($url) {
+    if(!isset($url) || !$url) $url = $_SERVER['REQUEST_URI'];
+    $url = self::addDomain($url);
+    $urlinfo = parse_url($url);
+    if(!isset($urlinfo['path']) || !$urlinfo['path']) $urlinfo['path'] = "/";
+    if(!isset($urlinfo['query']) || !$urlinfo['query']) $urlinfo['query'] = "";
+    if(defined("XHTML_STRICT") && XHTML_STRICT) $urlinfo['query'] = str_replace("&amp;", "&", $urlinfo['query']);
+    mb_parse_str($urlinfo['query'], $queryParts);
+    if(isset($urlinfo['query']) && $urlinfo['query']) $urlinfo['query'] = http_build_query($queryParts, false, self::getSeperator());
+    return $urlinfo;
+  }
+  
+  
+  public static function build($urlinfo) {
+    $url = "";
+    if($urlinfo['scheme']) {
+      if($urlinfo['scheme'] == "mailto") $url .= $urlinfo['scheme'].":";
+      else $url .= $urlinfo['scheme']."://";
+    } else $url .= "http://";
+    
+    if(isset($urlinfo['user']) && $urlinfo['user']) {
+      $url .= $urlinfo['user'];
+      if($urlinfo['pass']) $url .= ":".$urlinfo['pass'];
+      $url .= "@";
+    }
+    
+    if(isset($urlinfo['host']) && $urlinfo['host']) $url .= $urlinfo['host'];
+    
+    if(isset($urlinfo['port']) && $urlinfo['port']) $url .= ":".$urlinfo['port'];
+    
+    if(isset($urlinfo['path']) && $urlinfo['path']) $url .= $urlinfo['path'];
+    else $url .= "/";
+    
+    if(isset($urlinfo['query']) && $urlinfo['query']) $url .= "?".$urlinfo['query'];
+    if(isset($urlinfo['fragment']) && $urlinfo['fragment']) $url .= "#".$urlinfo['fragment'];
+    
+    return $url;
+  }
+
+  public static function parseParams($paramsStr) {
+    $params = array();
+
+    if(mb_strpos($paramsStr, "?") !== false) {
+      $paramParts = explode("?", $paramsStr);
+      $paramsStr = $paramParts[1];
+    }
+
+    $keyValues = explode(self::getSeperator(), $paramsStr);
+
+    if(is_array($keyValues) && count($keyValues)) {
+      foreach($keyValues as $keyValue) {
+        @list($key, $value) = explode("=", $keyValue);
+        $params[$key] = $value;
+      }
+    }
+
+    return $params;
+  }
+
+  public static function buildParams($params) {
+    $paramsStr = "";
+    foreach($params as $key=>$val) if($key) $paramsStr .= $key."=".$val.self::getSeperator();
+    return mb_substr($paramsStr, 0, -mb_strlen(self::getSeperator()));
+  }
+
+  public static function addParams($url, $values) {
+    if(!isset($values) || !is_array($values)) $values = array();
+    $urlinfo = self::parse($url);
+    $params = self::parseParams($urlinfo['query']);
+    $params = array_merge($params, $values);
+    $urlinfo['query'] = self::buildParams($params);
+    return self::build($urlinfo);
+  }
+
+  public static function delParams($url, $keys) {
+    $urlinfo = self::parse($url);
+    $params = self::parseParams($urlinfo['query']);
+
+    if(is_array($keys) && count($keys)) {
+      foreach($keys as $key) {
+        if(isset($params[$key])) unset($params[$key]);
+      }
+    }
+
+    $urlinfo['query'] = self::buildParams($params);
+    return self::build($urlinfo);
+  }
+
+  public static function getSortableParams() {
+    $params = array();
+    $params['od'] = "ASC";
+    if(isset($_GET['s']) && $_GET['s']) $params['s'] = $_GET['s'];
+    if(isset($_GET['o']) && $_GET['o']) $params['o'] = $_GET['o'];
+    if(isset($_GET['od']) && $_GET['od']) $params['od'] = $_GET['od'];
+    if(isset($_GET['c']) && $_GET['c']) $params['c'] = $_GET['c'];
+    if(isset($_GET['p']) && $_GET['p']) $params['p'] = $_GET['p'];
+    return $params;
+  }
+
+  public static function addDomain($url) {
+    if(mb_substr($url, 0, 4) != "http") return "http://".$_SERVER['SERVER_NAME'].((mb_substr($url,0,-1)=="/")?mb_substr($url,1):$url);
+    else return $url;
+  }
+
+}
+
+
+  /*********************************************************************/
+  /* SizeConverter is part of Speedbase                                */
+  /* Speedbase is a PHP framework created by Dan Larsen                */
+  /*********************************************************************/
+  /* This file and all other parts of Speedbase is free to use as is.  */
+  /* Dan Larsen can not be held liable for any use or misuse of the    */
+  /* code, so please check things before using in live environments ;) */
+  /*********************************************************************/
+  /* This class gives you a lot of url manipulation tools.             */
+  /*********************************************************************/
+
+// Beware that sizes can get quite large, when talking giga, tera and peta bytes... This should only be assumed to work safely on a 64bit system...
+class SizeConverter {
+  private static $sizes = array('bytes'=>0, 'kilo'=>1, 'mega'=>2, 'giga'=>3, 'tera'=>4, 'peta'=>5);
+  private static $sizeNames = array(0=>"", 1=>"k", 2=>"M", 3=>"G", 4=>"T", 5=>"P");
+  private static $sizeTranslations = array('b'=>"bytes", 'kb'=>"kilo", 'mb'=>"mega", 'gb'=>"giga", 'tb'=>"tera", 'pt'=>"peta");
+  
+  public static function humanToBytes($str, $factor=1024) {
+    $str = strtolower(preg_replace("/(\r\n|\r|\n)/s", " ", $str));
+    if(preg_match("/(kb|mb|gb|tb|pb|kilo|mega|giga|tera|peta)/i", $str, $match)) {
+      if(isset(self::$sizes[$match[1]])) $size = self::$sizes[$match[1]];
+      elseif(isset(self::$sizeTranslations[$match[1]])) $size = self::$sizes[ self::$sizeTranslations[$match[1]] ];
+      if($size) {
+        $bytes = floatval(preg_replace("/(".$match[1]."|bytes|\s+)/", "", $str));
+        for($i=1 ; $i <= $size ; $i++) {
+          $bytes = ($bytes * $factor);
+        }
+      }
+    } else $bytes = $str;
+    
+    return floatval($bytes);
+  }
+  
+  public static function bytesToHuman($bytes, $descriptor=false, $factor=1024) {
+    $bytes = floatval($bytes);
+    
+    $size = false;
+    if($descriptor) {
+      $descriptor = strtolower($descriptor);
+      if(isset(self::$sizes[$descriptor])) $size = self::$sizes[$descriptor];
+      elseif(isset(self::$sizeTranslations[$descriptor])) $size = self::$sizes[ self::$sizeTranslations[$descriptor] ];
+    }
+    if($size !== false) {
+      // Check if $size is bytes and return result if it is
+      if(!$size) return $bytes;
+      else {
+        for($i=0 ; $i < $size ; $i++) $bytes = ($bytes / $factor);
+        return floatval($bytes);
+      }
+      
+    } else {
+      $size = 0;
+      while($bytes >= $factor) {
+        $size++;
+        $bytes = ($bytes / $factor);
+      }
+      return sprintf("%0.2f", $bytes)." ".self::$sizeNames[$size];
+    }
+  }
+  
+  public static function humanToHuman($str, $descriptor=false, $factor=1024) {
+    $bytes = self::humanToBytes($str, $factor);
+    return self::bytesToHuman($bytes, $descriptor, $factor);
+  }
+}
+
+
+/*********************************************************************/
+/* Timer is part of Speedbase                                        */
+/* Speedbase is a PHP framework created by Dan Larsen                */
+/*********************************************************************/
+/* This file and all other parts of Speedbase is free to use as is.  */
+/* Dan Larsen can not be held liable for any use or misuse of the    */
+/* code, so please check things before using in live environments ;) */
+/*********************************************************************/
+/* This class gives easy access to start and stop timers + read out  */
+/* middle times - great for debugging and finding slow areas in your */
+/* code.                                                             */
+/*********************************************************************/
+
+class Timer {
+  private $startTime = 0;
+  private $lastMiddleTime = false;
+
+  public function __construct($autostart=false) {
+    if($autostart) $this->start();
+  }
+
+  public function start($timestamp=false) {
+    $this->startTime = (($timestamp) ? $timestamp : microtime(true));
+  }
+
+  public function getMiddleTime() {
+    if(!$this->lastMiddleTime) $this->lastMiddleTime = $this->startTime;
+    return ( microtime(true) - $this->lastMiddleTime );
+  }
+  
+  public function strMiddleTime($decimals=6) {
+    if($decimals > 8) $decimals = 8;
+    return sprintf("%0.".intval($decimals)."f", $this->getMiddleTime());
+  }
+
+  public function exitMiddleTime($decimals=8) {
+    exit("it took: ".$this->strMiddleTime($decimals)." secs");
+  }
+
+  public function getTime() {
+    return ( microtime(true) - $this->startTime );
+  }
+  
+  public function strTime($decimals=6) {
+    if($decimals > 8) $decimals = 8;
+    return sprintf("%0.".intval($decimals)."f", $this->getTime());
+  }
+
+  public function exitTime($decimals=8) {
+    exit("it took: ".$this->strTime($decimals)." secs");
+  }
+
+}

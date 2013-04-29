@@ -1,0 +1,5 @@
+name = Custom Blocks
+description = Provide Custom Blocks
+package = Other
+core = 7.x
+files[] = custom_blocks.module

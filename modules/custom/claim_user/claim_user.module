@@ -1,0 +1,126 @@
+<?php
+
+function _claim_user_access() {
+  return !user_is_logged_in();
+}
+
+/**
+ * Implements hook_menu().
+ */
+function claim_user_menu() { 
+  $items = array();
+  
+  $items['user/claim'] = array(
+    'title' => 'Claim User',
+    'page callback' => '_claim_user_page',
+    'access callback' => '_claim_user_access',
+    'type' => MENU_CALLBACK
+  );
+  
+  return $items;
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function claim_user_theme() {
+  $themes = array();
+  
+  $themes['claim_user_page'] = array(
+    'variables' => array(),
+  );
+  
+  $themes['claim_user_form'] = array(
+    'render element' => 'form',
+    'template' => 'claim-user-form',
+  );
+   
+  return $themes;
+}
+
+function _claim_user_page() {
+  drupal_set_title(t('Get a new password'));
+  $output = theme('claim_user_page', array());
+  
+  return $output;
+}
+
+function claim_user_form($form, &$form_state) {
+  $terms_url = variable_get('claim_user_terms_url', 'legal');
+  $options['attributes'] = array('class' => "sq-ajax-textpage-link");
+  $options['query'] = array('show_ajax' => 1);
+
+  $form['mail'] = array(
+    '#type' => 'textfield',
+    '#title' => t('E-mail address'),
+    '#maxlength' => EMAIL_MAX_LENGTH,
+    '#description' => t('You use this email for logging in. We do not mis-use your e-mail or use it for commercial purposes without your approval'),    
+    '#required' => TRUE
+  );
+    
+  $form['check'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('I have read the !link', array('!link' => l(t('terms and conditions'), $terms_url, $options))),
+    '#required' => TRUE
+  );
+  
+  $form['field_newsletters'] = array(
+    '#type' => 'checkbox',
+    '#attributes' => array('checked' => 'checked'),
+    '#title' => t('I wish to receive monthly newsletters to keep me up-to-date on what’s happening in this community'),
+  );
+  
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Send')
+  );
+
+  return $form;
+}
+
+function claim_user_form_validate($form, &$form_state) { 
+  $mail = trim($form_state['values']['mail']);
+  // Try to load by email.
+  $users = user_load_multiple(array(), array('mail' => $mail, 'status' => '1'));
+  $account = reset($users);  
+  if (isset($account->uid)) {
+    form_set_value(array('#parents' => array('account')), $account, $form_state);
+  }
+  else {
+    if (!empty($mail)) {
+      form_set_error('name', t('Sorry, %name is not recognized as a user name or an e-mail address.', array('%name' => $mail)));
+    }
+  }
+}
+
+function claim_user_form_submit($form, &$form_state) { 
+  module_load_include('inc', 'user', 'user.pages');
+  user_pass_submit($form, $form_state);
+}
+
+/*****  THEME  ********/
+
+function theme_claim_user_page($variables) {
+  $output = '';
+  
+  //$output = drupal_render(drupal_get_form('claim_user_form'));
+  
+  $form = drupal_get_form('claim_user_form');
+  $output = drupal_render($form);
+  
+  $output .= '<div class="request-new-password" style="float:left;">';
+  $output .= 'If you have trouble signing in or have changed your e-mail address, then please visit';
+  $output .= ' <a href="/node/17331">Request a new password</a>';
+  $output .= '</div>';
+
+  return $output;
+}
+
+function claim_user_form_claim_user_form_alter(&$form) {
+  $form['#submit'][] = 'claim_user_form_claim_user_form_submit';
+}
+
+function claim_user_form_claim_user_form_submit(&$form, &$form_state) {
+  $form_state['redirect'] = 'user/forgot';
+}
+

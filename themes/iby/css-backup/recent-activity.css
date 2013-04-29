@@ -1,0 +1,81 @@
+#recent-list tr.sticky, #recent-list tr.sticky td { background-color: #e0f8fb; }
+/*#recent-list tr.new-content, #recent-list tr.new-content td { background-color: #fbfbfb; }*/
+#recent-list tr.new-content td { font-weight: bold; }
+#recent-list tr.new-content td a { font-weight: bold; color: #0090b1; }
+
+
+/* Table has 750px in width - each header has 3px padding on each side */
+
+#recent-list, #recent-list a { font-size: 10px; }
+#recent-list th { text-align: left; padding: 3px; }
+#recent-list th.sortable a { padding-right: 10px; font-weight: normal; background: transparent url(/sites/all/themes/iby/images/sort_none.png) right 3px no-repeat; }
+#recent-list th.sortable a:hover { background-image: url(/sites/all/themes/iby/images/sort_asc.png); }
+#recent-list th.orderby a { font-weight: bold; text-decoration: underline; }
+#recent-list th.sortable.desc a { background-image: url(/sites/all/themes/iby/images/sort_desc.png); }
+#recent-list th.sortable.desc a:hover { background-image: url(/sites/all/themes/iby/images/sort_asc.png); }
+#recent-list th.sortable.asc a { background-image: url(/sites/all/themes/iby/images/sort_asc.png); }
+#recent-list th.sortable.asc a:hover { background-image: url(/sites/all/themes/iby/images/sort_desc.png); }
+
+#recent-list th.sortable.marked.orderby a { background-image: url(/sites/all/themes/iby/images/sort_asc.png); }
+
+#mark_all_read { color: #00B0CA; margin-left: 3px; text-decoration: none; font-size: 10px; font-weight: bold; }
+
+#recent-list th.mark { width: 76px; }                                /* 76  + 6 = 82,  total: 82 */
+#recent-list th.marked { width: 55px; }                              /* 55  + 6 = 61,  total: 143 */
+#recent-list th.section { width: 60px; }                             /* 60  + 6 = 66,  total: 209 */
+#recent-list th.forum { width: 100px; }                              /* 100 + 6 = 106, total: 315 */
+#recent-list th.node { width: 170px; }                               /* 170 + 6 = 176, total: 491 */
+#recent-list th.last-activity { width: 45px; }                       /* 45  + 6 = 51,  total: 541 */
+#recent-list th.unread-comments { width: 55px; text-align: center; } /* 55  + 6 = 61,  total: 603 */
+#recent-list th.comments { width: 60px; text-align: center; }        /* 60  + 6 = 66,  total: 669 */
+#recent-list th.user { width: 75px; text-align: left; }              /* 75  + 6 = 81,  total: 750 */
+
+#recent-list td { padding: 3px; }
+#recent-list td.mark { text-align: center; }
+#recent-list td.marked { text-align: center; }
+#recent-list td.forum a { display: block; height: 24px; width: 100px; overflow: hidden; }
+#recent-list td.node a { display: block; height: 24px; width: 170px; overflow: hidden; }
+#recent-list td.unread-comments { text-align: center; }
+#recent-list td.comments { text-align: center; }
+#recent-list td.user a { display: block; overflow: hidden; width: 75px; }
+/*
+#recent-list td.section { width: 100px; }
+#recent-list td.last-activity { width: 100px; }
+*/
+
+
+#recent-list td.marked a { display: block; float: left; width: 15px; height: 15px; background: transparent url(/sites/all/themes/iby/images/stars.png) left top no-repeat; }
+/*
+#recent-list td.marked.active a { background-position: left -15px; }
+#recent-list td.marked a:hover { background-position: left -15px; }
+*/
+#recent-list td.marked a.sq-flags-active { background-position: left -15px; }
+#recent-list td.marked a.sq-flags-active:hover { background-position: left top; }
+#recent-list td.marked a.sq-flags-inactive { background-position: left top; }
+#recent-list td.marked a.sq-flags-inactive:hover { background-position: left -15px; }
+/*
+#recent-list td.marked .ajax-progress { visibility: hidden; display: none; }
+*/
+
+.recent-topbar { width: 755px; text-align: left; }
+.recent-topbar-left { width: 350px; height: 45px; float: left; font-size:15px; font-weight: bold; color: #00b0ca; margin-top: 5px; }
+
+.recent-topbar-right { width: 378px; height: 45px; float: right; }
+.recent-area-label { float: left; font-size: 14px; font-weight: bold; color: #666; margin-top: 5px; }
+
+#time-filter, #time-filter li { list-style: none; margin: 0; padding: 0; float: left; }
+#time-filter, #time-filter a { text-decoration: none; font-size: 11px; color: #666; }
+#time-filter a:hover { font-weight: bold; text-decoration: underline; }
+#time-filter li.active a { font-weight: bold; text-decoration: underline; }
+#time-filter li.label { margin-right: 10px; }
+#time-filter li.spacer { margin-left: 5px; margin-right: 5px; }
+
+#pages-filter, #pages-filter li { list-style: none; margin: 0; padding: 0; float: left; }
+#pages-filter, #pages-filter a { text-decoration: none; font-size: 11px; color: #666; }
+#pages-filter { margin-top: 15px; float: right; }
+#pages-filter a:hover { font-weight: bold; text-decoration: underline; }
+#pages-filter li.active a { font-weight: bold; text-decoration: underline; }
+#pages-filter li.label { margin-right: 10px; }
+#pages-filter li.spacer { margin-left: 5px; margin-right: 5px; }
+
+#recent-list { margin-top: 10px; }

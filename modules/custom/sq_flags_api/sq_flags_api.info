@@ -1,0 +1,6 @@
+name = Flags API
+description = Creates an API for flagging content in several useful ways. Flag as following, liked, offending - whatever you like
+package = Modules created by Socialsquare
+core = 7.x
+files[] = sq_flags_api.module
+files[] = sq_flags_api.install

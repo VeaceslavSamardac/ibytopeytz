@@ -1,0 +1,325 @@
+.filter-wrapper.form-wrapper { display: none; }
+
+/* IBY Forums */
+.ibyforum { /*border: 1px solid #999; */ }
+.ibyforum-bg { background-color: #f9f7f2; }
+.page-forum-5 #vip-rooms-forums-content .ibyforum-bg, .page-forum-40 #tips-tricks-content .ibyforum-bg, .page-forum-92 #chat-forums-forums .ibyforum-bg, .page-dashboard .slide .ibyforum-bg, .page-forum-2 .fp-scrollable .ibyforum-bg { background-color: transparent; }
+.sticky .ibyforum-bg { background-color: #d7f5f8; }
+
+/* IBY Forum full view */
+.ibyforum-full { margin: 15px 0 0 4px; width: 745px; clear: both; font-size: 12px; background-color: #7AB800; text-align: left; 
+}
+.ibyforum-full.type-message { background: #F9F7F2 url(/sites/all/themes/iby/images/type_bg_message.png) center top no-repeat; padding-top: 5px;}
+.ibyforum-full.type-all { background: #F9F7F2 url(/sites/all/themes/iby/images/type_bg_all.png) center top no-repeat; padding-top: 5px;}
+.ibyforum-full.type-continence { background: #F9F7F2 url(/sites/all/themes/iby/images/type_bg_green.png) left top no-repeat; padding-top: 5px;}
+.ibyforum-full.type-ostomy { background: #F9F7F2 url(/sites/all/themes/iby/images/type_bg_blue.png) left top no-repeat; padding-top: 5px;}
+.ibyforum-full.type-all .challenges-enter { width: 200px; margin: auto; margin-top: 0; color: #fff; /*background-color: #7ab800;*/ }
+.ibyforum-full.type-continence .challenges-enter { width: 200px; margin: auto; margin-top: 0; color: #fff; /*background-color: #7AB800;*/ }
+.ibyforum-full.type-ostomy .challenges-enter { width: 200px; margin: auto; margin-top: 0; color: #fff; /*background-color: #0065BD;*/ }
+
+
+.ibyforum-full .ibyforum-image { width: 160px; float: left; overflow: hidden; }
+.ibyforum-full .ibyforum-texts { width: 360px; float: left; }
+.ibyforum-full .ibyforum-info { width: 230px; height: 120px; float: left; background-color: #fff; }
+
+.ibyforum-full .ibyforum-bg { padding: 0px; height: 450px; }
+.ibyforum-full .ibyforum-number { 
+	margin-top: 0px; 
+	padding: 8px 21px;
+	background-color: #fff; 
+	color: #00b0ca; 
+	font-weight: bold; 
+	font-size: 15px; 
+  height: 20px;
+}
+.ibyforum-full .ibyforum-number span { display: block; float: left; }
+
+.ibyforum-full .ibyforum-name { margin-top: 0px; padding: 15px; width: 300px; padding-bottom: 5px; font-size: 22px; float:left;  }
+.ibyforum-full .challenges_header_wrapper h3 {margin-top: 0px; padding-top: 13px; width: 360px; font-weight: bold; font-size: 20px; float:left; color:#666; }
+.ibyforum-full .challenges_header_wrapper {	overflow: hidden; padding: 4px 21px; }
+.ibyforum-full  .challenges_header_stats .stat, 
+.chat-forums-large-box .challenges_header_stats .stat  {font-size: 11px; font-weight: bold;color: #666; margin-right: 5px; padding-right: 5px;border-right: 1px solid #666; float:left;}
+.ibyforum-full  .challenges_header_stats .stat.last,
+.chat-forums-large-box .challenges_header_stats .stat.last {margin-right: 0px; border-right: 0px; padding-right: 0px;}
+.ibyforum-full .challenges_header_stats {float:right; margin-top: 10px; clear:right;} /* Corrected from: 20px 15px 15px 15px */
+.stat_numbers {font-weight: bold;font-size: 15px;}
+.ibyforum-full .ibyforum-divider  { margin-left: 0px; width: 710px; margin-top: 5px; margin-left: 20px; height: 1px; border-top: 1px dotted #000; }
+.ibyforum-full .ibyforum-short-container  { margin: 0px; padding: 20px; padding-bottom: 0px; width: 355px; float: left; }
+.ibyforum-full .ibyforum-short-container-slider  { margin: 0px; padding: 5px 20px 0px 20px; width: 355px; float: left; }
+
+.ibyforum-full .ibyforum-short  { margin: 0px; padding: 0px; width: 335px; height: 280px; overflow: hidden; }
+.ibyforum-full .ibyforum-image { margin: 18px 20px 0 0; width: 330px; float: left; overflow: hidden; position: relative; }
+.ibyforum-full .ibyforum-image-slider { margin: 0px 20px 0 0; width: 265px; float: left; overflow: hidden; height: 313px;}
+.ibyforum-full .ibyforum-view  { width: 120px; margin: auto; text-align: center; font-size: 14px; font-weight: bold; margin-top: 10px; padding-top: 6px; padding-bottom: 6px; color: #fff; background-color: #00b0ca; }
+.ibyforum-full .ibyforum-view a { text-decoration: none; color: #fff; }
+.ibyforum-full .sq-follow-link { margin-top: 6px; }
+.ibyforum-full .show-more-link { margin-top: 18px; }
+
+
+/* IBY Forum Topics */
+.ibyforum-topics-content { width: 755px; margin: auto; }
+.ibyforum-topics-content .ibyforum-topic-bg { background-color: #f9f7f2; }
+.ibyforum-topics-content .ibyforum-topic { border: 1px solid #999; }
+
+.ibyforum-topic-content .ibyforum-topic-body { width: 440px; overflow: hidden; word-wrap: break-word; }
+
+
+/* IBY Forum Topic and comments page */
+.ibyforum-topic-content #top-divider { clear: both; margin-top: 10px; margin-bottom: 10px; height: 1px; border-top: 1px dotted #999; width:765px; }
+.ibyforum-topic-content { width: 805px; }
+
+.ibyforum-topic-container { width: 591px; float: left; }
+
+.ibyforum-topic-owner { width: 90px; margin-right: 25px; float: left; }
+.ibyforum-topic-owner img { width: 90px; }
+.ibyforum-topic-owner { font-size: 10px; color: #999; font-weight: bold; }
+.ibyforum-topic-owner .owner-name { font-size: 14px; color: #666; font-weight: bold; margin-top: 3px; margin-bottom: 3px; text-decoration:none;}
+.ibyforum-topic-owner .owner-vip, .ibyforum-topic-owner .member-type { color: #666; }
+.ibyforum-topic-owner .owner-created {  }
+.ibyforum-topic-owner .owner-online-status {  }
+.ibyforum-topic-owner .owner-online-indicator, .ibyforum-topic-owner .owner-offline-indicator { float: left; width: 9px; height: 9px; margin-top: 1px; margin-right: 4px; -moz-border-radius: 5px; -webkit-border-radius: 5px; border-radius: 5px; }
+.ibyforum-topic-owner .owner-online-indicator { background-color: #7AB800; }
+.ibyforum-topic-owner .owner-offline-indicator { background-color: #933; }
+
+.ibyforum-topic-container { color: #666; font-size: 12px; }
+.ibyforum-topic-container h2 { font-size: 18px; float: left; width: 80%; padding: 0px; margin: 0px;}
+.ibyforum-topic-container h3 { margin: 0px; font-size: 10px; }
+.ibyforum-topic-container .action-buttons { width: 65px; float: right; }
+.ibyforum-topic-container .action-buttons .like-button { width: 65px; height: 20px; background-color: #e0684b; color: #fff; }
+.ibyforum-topic-container .action-buttons .follow-button { width: 65px; height: 20px; margin-top: 5px; background-color: #00b0ca; color: #fff; }
+.ibyforum-topic-container .content-divider { clear: both; height: 1px; border-top: 1px dotted #999; margin-top: 5px; margin-bottom: 5px; }
+.ibyforum-topic-container .hard-divider { clear: both; border-bottom: 1px solid #ccc; margin-top: 5px; margin-bottom: 5px; }
+.ibyforum-topic-container .hard-divider a { display: block; text-decoration: none; float: left; color: #00b0ca; }
+.ibyforum-topic-container .hard-divider a img { margin-bottom: 2px; margin-left: 3px; }
+
+.ibyforum-topic-container .ibyforum-topic-content { width: 440px; margin-right: 20px; float: left; }
+
+.ibyforum-topic-container .ibyforum-topic-navigation { width: 440px; }
+.ibyforum-topic-container .ibyforum-topic-navigation .comment-button { /*width: 135px;*/ margin-top: 20px; /*background-color: #00b0ca;*/ }
+
+/*.ibyforum-topic-content .ibyforum-topic-navigation .to-top-button { float: right; }*/
+
+.ibyforum-topic-right { width: 200px; float: left; }
+
+.ibyforum-right { color: #666; margin-left: 8px; width: 175px; float: left; font-size: 12px; background-color: #7AB800; }
+.ibyforum-right.odd { background-color: #339; }
+
+.ibyforum-right .ibyforum-info { padding-top: 4px; }
+.ibyforum-right .ibyforum-image { margin: 0; padding: 0; }
+.ibyforum-right .ibyforum-image img { width: 175px; }
+.ibyforum-right.odd .ibyforum-enter { background-color: #339; }
+.ibyforum-right .ibyforum-bg { padding-bottom: 0px; margin-top: 5px; background-color: #fbf9f4; }
+.ibyforum-right .ibyforum-number { margin: 10px; margin-top: 5px; }
+.ibyforum-right .ibyforum-number a { color: #00b0ca; font-weight: bold; font-size: 14px; text-decoration: none; }
+.ibyforum-right .ibyforum-divider { width: 145px; margin: 10px; border-top: 1px dotted #666; }
+.ibyforum-right .ibyforum-name { width: 145px; margin: 10px; }
+.ibyforum-right .ibyforum-name a { font-weight: bold; font-size: 14px; text-decoration: none; color: #666; }
+.ibyforum-right .ibyforum-short { width: 145px; margin: 10px; }
+.ibyforum-right .ibyforum-view { width: 150px; margin: auto; margin-top: 10px; /*background-color: #8dc124;*/ }
+.ibyforum-right .ibyforum-contribute { width: 150px; margin: auto; margin-top: 10px; /*background-color: #00b0ca; */}
+
+
+/* This is for the right boxes in the forums - NOT the one under challenges... */
+.ibyforum-right-box { width: 180px; }
+.ibyforum-right-box h3 { color: #6C6E70; font-size: 15px; margin: 0; padding: 0; margin-right: 20px; }
+.ibyforum-right-box .divider { width: 100%; border-top: 1px dotted #666; margin: 0; padding: 0; margin-top: 9px; margin-bottom: 9px; }
+
+.ibyforum-right-box .account-picture { width: 35px; height: 30px; overflow: hidden; float: left; }
+.ibyforum-right-box .account-info { width: 145px; float: left; }
+.ibyforum-right-box .account-info div { font-size: 10px; color: #666; font-weight: bold; line-height: 13px; line-height: 120%; }
+
+.ibyforum-right-box .account-info a { font-size: 11px; color: #666; line-height: 13px; text-decoration: none; }
+
+.ibyforum-right-box .account-info .node_body { font-weight: normal; margin-top: 10px; margin-bottom: 10px; overflow: hidden; }
+
+/* Tag cloud */
+.tag-cloud-container { height: 90px; overflow: hidden; position: relative; }/*width: 750px; }*/
+.tag-cloud { margin: 0; padding: 0; margin-left: 10px; margin-top: 10px; float: left; }
+.tag-cloud .tag-cloud-tag { float: left; margin: 0; padding: 0; margin-left: 15px; position: relative; padding-top: 2px; padding-bottom: 15px; }
+.tag-cloud .tag-cloud-tag a { color: #818485; padding: 4px; text-decoration: none; }
+.tag-cloud .tag-cloud-tag.selected a.linkimage { float: right; display: block; position: absolute; top: -19px; } /*url(/sites/all/themes/iby/images/close_button.png) right top no-repeat; }*/
+.tag-cloud .tag-cloud-tag.selected a.linktext { font-weight: bold; background: #f1ecdf } /*url(/sites/all/themes/iby/images/close_button.png) right top no-repeat; }*/
+
+/* Tag box */
+.tag-box { list-style: none; margin: 0; padding: 0; margin-left: 10px; margin-top: 15px; }
+.tag-box li { float: left; margin: 0; padding: 0; margin-right: 17px; position: relative; padding-bottom: 15px; }
+.tag-box li a { color: #818485; padding: 4px; text-decoration: none; }
+.tag-box li.selected a.linkimage { float: right; display: block; position: absolute; top: -19px; } /*url(/sites/all/themes/iby/images/close_button.png) right top no-repeat; }*/
+.tag-box li.selected a.linktext { font-weight: bold; background: #f1ecdf } /*url(/sites/all/themes/iby/images/close_button.png) right top no-repeat; }*/
+
+/* Suggestion box */
+.suggestion-box h3 { color: #00b0ca; }
+.suggestion-box div { font-size: 11px; color: #666; line-height: 13px; text-decoration: none; }
+.suggestion-box .suggestion-text { margin-left: 15px; }
+.suggestion-box .send-button { margin-top: 30px; /*background-color: #00b0ca;*/ }
+
+/* Comments for a solution */
+.comment-owner { width: 90px; margin-right: 25px; float: left; }
+.comment-owner img { width: 90px; }
+.comment-owner { font-size: 10px; color: #999; font-weight: bold; }
+.comment-owner .owner-name { font-size: 14px; color: #666; font-weight: bold; margin-top: 3px; margin-bottom: 3px; text-decoration: none;}
+.comment-owner .owner-vip { color: #666; }
+.comment-owner .owner-created {  }
+.comment-owner .owner-online-status {  }
+.comment-owner .owner-online-indicator, .comment-owner .owner-offline-indicator { float: left; width: 9px; height: 9px; margin-top: 1px; margin-right: 4px; -moz-border-radius: 5px; -webkit-border-radius: 5px; border-radius: 5px; }
+.comment-owner .owner-online-indicator { background-color: #7AB800; }
+.comment-owner .owner-offline-indicator { background-color: #933; }
+
+.comment-content { width: 440px; margin: 0; float: left; }
+.indented { margin-left: 115px; }
+.indented .comment-content { width: 315px; }
+.indented .indented .comment-content { width: 390px; }
+.indented .indented .indented .comment-content { width: 365px; }
+.indented .indented .indented .indented .comment-content { width: 340px; }
+
+.comment-container { color: #666; font-size: 12px; }
+.comment-container h2 { font-size: 18px; float: left; color: #00b0ca; margin: 0; margin-bottom: 4px; }
+.comment-container h2 a { color: #666; text-decoration: none; }
+.comment-container h3 { margin-top: 4px; margin-bottom: 10px; font-size: 10px; color: #666; }
+
+.comment-container .action-buttons { width: 65px; float: right; }
+.comment-container .action-buttons .like-button { width: 65px; height: 20px; background-color: #e0684b; color: #fff; }
+.comment-container .action-buttons .follow-button { width: 65px; height: 20px; margin-top: 5px; background-color: #00b0ca; color: #fff; }
+.comment-container .content-divider { clear: both; height: 1px; border-top: 1px dotted #999; margin-top: 5px; margin-bottom: 5px; }
+.comment-container .hard-divider { clear: both; border-bottom: 1px solid #999; margin-top: 5px; margin-bottom: 5px; }
+.comment-container .hard-divider a { display: block; text-decoration: none; float: right; color: #00b0ca; }
+.comment-container .hard-divider a img { margin-bottom: 2px; margin-left: 3px; }
+
+/*.comment-container .solution-navigation { height: 70px; }*/
+/*.comment-container .solution-navigation .comment-button { margin-top: 30px; }/*
+
+/* This is a comment that has just been created by the current user */
+.comment-container.comment-created { }/*background-color: #ccf0f3; }*/
+.solution-navigation {margin-top: 20px;}
+.hide-me { display: none; }
+
+.comment-body { word-wrap: break-word; }
+
+/* Type tabs */
+.ibyforum-type-all, .ibyforum-type-continence, .ibyforum-type-ostomy { font-weight: bold; float: left; height: 28px; font-size: 12px; color: #aaa; margin-left: 10px; padding-top: 5px; text-align: center; text-decoration: none; }
+.ibyforum-type-all { display: block; width: 60px; background: transparent url(/sites/all/themes/iby/images/type_tab_all.png) left -33px no-repeat; }
+.ibyforum-type-continence { display: block; width: 100px; background: transparent url(/sites/all/themes/iby/images/type_tab_continence.png) left -33px no-repeat; }
+.ibyforum-type-ostomy { display: block; width: 100px; background: transparent url(/sites/all/themes/iby/images/type_tab_ostomy.png) left -33px no-repeat; }
+.ibyforum-type-active { color: #666; }
+ 
+.ibyforum-type-all.ibyforum-type-active {display: block; width: 60px; background: transparent url(/sites/all/themes/iby/images/type_tab_all.png) left top no-repeat;}
+.ibyforum-type-ostomy.ibyforum-type-active{display: block; width: 100px; background: transparent url(/sites/all/themes/iby/images/type_tab_ostomy.png) left 0 no-repeat;}
+.ibyforum-type-continence.ibyforum-type-active {
+	display: block; width: 100px; background: transparent url(/sites/all/themes/iby/images/type_tab_continence.png) left 0px no-repeat;
+}
+
+
+.tips-tricks-right-box .thread-follower h3, .tips-tricks-right-box .thread-follower h3 a {
+color: #0FA9C1;
+text-decoration: none;
+display: block;
+font-size: 14px;
+}
+.tips-tricks-right-box .followers, .tips-tricks-right-box .saved-problem a, .tips-tricks-right-box .saved-solution a, .tips-tricks-right-box .saved-solution {
+font-size: 12px;
+color: #666;
+text-decoration: none;
+}
+
+.tips-tricks-right-box .submitted {
+font-size: 10px;
+color: #333;
+}
+
+.tips-tricks-right-box .removefromlist a {
+font-size: 10px;
+color: #333;
+display: block;
+}
+
+.comment-preview {
+	padding: 20px;
+	border: 1px dotted #666;
+	background-color: #ffffea;
+}
+.comment-preview h1 {
+	font-size: 20px;
+	color: #00B0CA;
+}
+.comment-preview .content-divider { clear: both; height: 1px; border-top: 1px dotted #999; margin-top: 5px; margin-bottom: 5px; }
+
+.add-comment-content { margin-bottom: 20px; }
+.node-add-content label,
+#node-add-content label,
+.comment_form_wrapper label,
+.add-comment-content label
+ { font-size: 13px; font-weight: bold; margin-bottom: 7px; }
+
+.comment-box { height: 475px; padding-left: 20px; padding-right: 20px; }
+
+.node-add-content { height:720px; }
+
+.field-name-field-files legend { display: none; visibility: hidden; }
+
+#forum form .description { font-size: 10px; font-weight: bold; margin-left: 0; }
+
+
+
+/* Grid view for topics */
+.ibyforum-topic-grid { float: left; width: 240px; height: 600px; margin-left: 15px; margin-bottom: 20px; overflow:hidden; background-color: #fff; }
+.ibyforum-topic-grid .ibyforum-bg { height: 460px; padding: 14px; }
+.ibyforum-topic-grid h2 { height: 42px; overflow: hidden; }
+.ibyforum-topic-grid h2, .ibyforum-topic-grid h2 a { color: #666; font-size: 18px; padding: 0; margin: 0; margin-bottom: 14px; text-decoration: none; }
+.ibyforum-topic-grid-divider { border-top: 1px dotted #666; width: 207px; height: 1px; maring: 0px; padding: 0; }
+
+.ibyforum-topic-grid .ibyforum-owner { 
+	/*margin-top: 2px;*/ 
+	height: 38px; 
+	border-top: 1px dotted #818485;
+	border-bottom: 1px dotted #818485;
+	padding-bottom: 3px;
+	padding-top: 5px;
+}
+.ibyforum-topic-grid .ibyforum-owner .owner-info { margin-left: 4px; }
+.ibyforum-topic-grid .ibyforum-owner .owner-name, .ibyforum-topic-grid .ibyforum-owner .owner-created { margin-top: 2px; height: 15px; color: #666; text-decoration: none; }
+
+.ibyforum-topic-grid .ibyforum-owner .owner-image, .ibyforum-topic-grid .ibyforum-owner .owner-info { float: left; color: #666; font-size: 10px; font-weight: bold; }
+
+.ibyforum-topic-grid .ibyforum-body { color: #666; font-size: 11px; margin-top: 4px; overflow: hidden; line-height: 123%; height: 320px; overflow: hidden;}
+.ibyforum-topic-grid .ibyforum-body.ibyforum-with-image { height: 155px; }
+
+.ibyforum-topic-grid .ibyforum-body-image { width: 207px; height: 150px; overflow: hidden; margin-top: 15px; }
+.ibyforum-topic-grid .ibyforum-body-image img { width: 207px; }
+
+.ibyforum-topic-grid .ibyforum-stats { background-color: #fff; font-size: 10px; color: #666; font-weight: bold; width: 240px; padding: 8px 0 12px 0; }
+.ibyforum-topic-grid .ibyforum-stats .row1, .ibyforum-stats .row2 { width: 202px; margin: auto; height: 25px; }
+.ibyforum-topic-grid .ibyforum-stats .row1 div span, .ibyforum-stats .row2 div span { font-size: 14px; }
+
+.ibyforum-topic-grid .ibyforum-stats .comments, .ibyforum-topic-grid .ibyforum-stats .views, .ibyforum-topic-grid .ibyforum-stats .followers, .ibyforum-topic-grid .ibyforum-stats .likes { padding-top: 5px; float: left; width: 100px; text-align: center; height: 20px; }
+
+.ibyforum-topic-grid .ibyforum-stats .row1 { border-bottom: 1px dotted #666; }
+.ibyforum-topic-grid .ibyforum-stats .row1 .comments, .ibyforum-topic-grid .ibyforum-stats .row2 .followers { border-right: 1px dotted #666; }
+
+.ibyforum-topic-grid .ibyforum-tags { font-size: 10px; color: #aaa; } 
+
+
+/* List view for topics */
+.ibyforum-topic-list { float: left; width: 750px; height: 110px; margin-bottom: 20px; background-color: #fff; }
+.ibyforum-topic-list .ibyforum-bg { height: 90px; width: 480px; padding: 10px; padding-left: 20px; float: left; }
+.ibyforum-topic-list h2, .ibyforum-topic-list h2 a { color: #666; font-size: 15px; padding: 0; margin: 0; text-decoration: none; height: 17px; }
+.ibyforum-topic-list-divider { border-top: 1px dotted #666; width: 465px; height: 1px; margin: 8px; margin-left: 0px; margin-right: 0px; padding: 0; }
+
+.ibyforum-topic-list .ibyforum-owner { margin-top: 2px; height: 16px; margin-bottom: 4px; }
+.ibyforum-topic-list .ibyforum-owner .owner-name { color: #666; text-decoration: none; }
+
+.ibyforum-topic-list .ibyforum-owner .owner-info { color: #666; font-size: 10px; font-weight: bold; }
+.ibyforum-topic-list .owner-image { float: left; width: 26px; height: 26px; margin-right: 4px; overflow: hidden; }
+
+.ibyforum-topic-list .ibyforum-body { float: left; color: #666; font-size: 11px; width: 420px; overflow: hidden; height: 38px; margin-left:10px;}
+
+.ibyforum-topic-list .ibyforum-stats { background-color: #fff; font-size: 10px; color: #666; font-weight: bold; width: 240px; padding: 5px 0 6px 0; float: right; }
+.ibyforum-topic-list .ibyforum-stats .row1, .ibyforum-stats .row2 { background-color:#fff; width: 202px; margin: auto; height: 25px; }
+.ibyforum-topic-list .ibyforum-stats .row1 div span, .ibyforum-stats .row2 div span { background-color:#fff; font-size: 14px; }
+
+.ibyforum-topic-list .ibyforum-stats .comments, .ibyforum-topic-list .ibyforum-stats .views, .ibyforum-topic-list .ibyforum-stats .followers, .ibyforum-topic-list .ibyforum-stats .likes { padding-top: 5px; float: left; width: 100px; text-align: center; height: 20px; }
+
+.ibyforum-topic-list .ibyforum-stats .row1 { border-bottom: 1px dotted #666; }
+.ibyforum-topic-list .ibyforum-stats .row1 .comments, .ibyforum-topic-list .ibyforum-stats .row2 .followers { border-right: 1px dotted #666; }
+
+
+h2.element-invisible { width: 0px; }

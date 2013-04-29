@@ -1,0 +1,5 @@
+name = Profiles Pretifier
+description = Enables the use of fieldset in profiles configured through the admin interface
+package = Modules created by Socialsquare
+core = 7.x
+files[] = iby_profiles_pretifier.module

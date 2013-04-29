@@ -1,0 +1,917 @@
+<?php
+module_load_include('class', 'iby_profiles_pretifier', 'smtp.php');
+
+/** 
+ * @file 
+ * Place for actual hooks code for the Socialsquare Profiles Pretifier
+ */ 
+
+function iby_profiles_pretifier_user_load($users) {
+  foreach($users as $user) {
+    if(!$user->picture) {
+      $user->picture = (object) array('uri' => variable_get('user_picture_default', ''));
+    }
+  }
+}
+
+function iby_profiles_pretifier_user_dashboard() {
+  // Initialize $variables
+  $variables = array();
+
+  // How many users are online?
+  $interval = REQUEST_TIME - variable_get('user_block_seconds_online', 900);
+  $query = db_select('users', 'u');
+  $query->addExpression('COUNT(*)', 'online_users');
+  $query->join('sessions', 's', 's.uid = u.uid AND s.timestamp >= '.$interval);
+  $query->condition('s.uid', '0', '>');
+  $variables['online_users'] = $query->execute()->fetchField(0);
+
+  // How many active users?
+  $query = db_select('users', 'u');
+  $query->addExpression('COUNT(*)', 'total_users');
+  $query->condition('u.status', '0', '>');
+  $variables['active_users'] = $query->execute()->fetchField(0);
+
+  // How many VIP members?
+  $vip_role_rid = db_select('role', 'r')->fields('r', array('rid'))->condition('r.name', 'VIP')->execute()->fetchField(0);
+  if($vip_role_rid) {
+    $query = db_select('users_roles', 'ur');
+    $query->addExpression('COUNT(*)', 'vip_members');
+    $query->condition('ur.rid', $vip_role_rid);
+    $query->join('users', 'u', 'u.uid = ur.uid');
+    $variables['vip_members'] = $query->execute()->fetchField(0);
+  } else $variables['vip_members'] = 0;
+
+  // Total number of posts
+  $query = db_select('comment', 'c');
+  $query->addExpression('COUNT(*)', 'total_posts');
+  $variables['total_posts'] = $query->execute()->fetchField(0);
+
+  // Newest member
+  $variables['newest_member_uid'] = db_select('users', 'u')->fields('u', array('uid'))->condition('u.status', '1')->orderBy('u.created', 'DESC')->range(0,1)->execute()->fetchField(0);
+
+  global $user;
+
+  // Get the 2 newest challenges
+  $challenges_tid = _iby_forums_get_tids_from_names(array('challenges'), 2);
+  $challenges_tid = array_shift($challenges_tid);
+  
+  $tids_query = db_select('taxonomy_term_hierarchy', 'th')->fields('th', array('tid'))->condition('th.parent', $challenges_tid);
+
+  $query_access = db_select('field_data_field_allowed_roles', 'far');
+  $query_access->fields('far', array('entity_id'));
+  $query_access->condition('far.field_allowed_roles_value', array_keys($user->roles), 'IN');
+  $query_access->condition('far.entity_type', 'taxonomy_term');
+  $query_access->condition('far.entity_id', $tids_query, 'IN');
+  $query_access->distinct();
+
+  $query = db_select('taxonomy_term_hierarchy', 'th');
+  if(!sqtools_is_admin($user)) {
+    $query->condition('th.tid', $query_access, 'IN');
+  }
+  $query->fields('th', array('tid'));
+  //$query->join('field_data_field_challenge_number', 'cn', 'cn.entity_id=th.tid');
+  $query->join('field_data_field_enddate', 'e', 'e.entity_id=th.tid AND e.field_enddate_value > NOW()');
+  $query->condition('th.parent', $challenges_tid);
+  //$query->orderBy('cn.field_challenge_number_value', 'DESC');
+  $query->orderBy('e.field_enddate_value', 'ASC');
+  $query->range(0, 2);
+
+  $res = $query->execute();
+  if($res) {
+    foreach($res as $row) $variables['challenges_tids'][] = $row->tid;
+  }
+  
+  // Get the 6 newest moderator forum topics
+  $moderators_tid = _iby_forums_get_tids_from_names(array("Important Messages"), 2);
+  $moderators_tid = array_shift($moderators_tid);
+
+  $user_roles = user_roles(true);
+  $rids = array();
+  foreach($user_roles as $rid => $user_role) {
+    if(in_array($user_role, array('administrator', "content_adm", "cp_adm", 'moderator'))) {
+      $rids[] = $rid;
+    } 
+  }
+  
+  $query = db_select('forum_index', 'fi');
+  $query->fields('fi', array('nid'));
+  $query->addExpression('MAX(last_comment_timestamp)', 'last_comment');
+  $query->condition('fi.tid', $moderators_tid);
+  $query->join('node', 'n', 'n.nid = fi.nid');
+  $query->condition('n.uid', db_select('users_roles', 'ur')->fields('ur', array('uid'))->condition('rid', $rids, 'IN'), 'IN');
+  $query->groupBy('fi.nid');
+  $query->orderBy('fi.created', 'DESC');
+  $query->range(0, 6);
+  
+  $res = $query->execute();
+  if($res) {
+    foreach($res as $row) $variables['moderator_nids'][] = $row->nid;
+  }
+  
+  // Get the latest dashboard slider node
+	$dashboard_slider = db_query("SELECT nid FROM node WHERE node.type = 'dashboard_slide' ORDER BY created DESC LIMIT 1")->fetchField();
+
+  $variables['dashboard_slider_id'][] = $dashboard_slider;
+  
+  // Get the 3 newest forum topics - internally the forums is called chat forums, in order to not conflict with the forum module.....
+  $forums_tid = _iby_forums_get_tids_from_names(array("Chat Forums"), 2);
+  $forums_tid = array_shift($forums_tid);
+  
+  $tids_query = db_select('taxonomy_term_hierarchy', 'th')->fields('th', array('tid'))->condition('th.parent', $forums_tid);
+
+  $query_access = db_select('field_data_field_allowed_roles', 'far');
+  $query_access->fields('far', array('entity_id'));
+  $query_access->condition('far.field_allowed_roles_value', array_keys($user->roles), 'IN');
+  $query_access->condition('far.entity_type', 'taxonomy_term');
+  $query_access->condition('far.entity_id', $tids_query, 'IN');
+  $query_access->distinct();
+
+  $query = db_select('forum_index', 'fi');
+  if(!sqtools_is_admin($user)) {
+    $query->condition('fi.tid', $query_access, 'IN');
+  }
+  $query->fields('fi', array('nid'));
+  $query->addExpression('MAX(last_comment_timestamp)', 'last_comment');
+  $query->addExpression('GREATEST(MAX(last_comment_timestamp), fi.created)', 'sort_stamp');
+  $query->condition('fi.tid', $tids_query, 'IN');
+  $query->groupBy('fi.nid');
+  $query->orderBy('sort_stamp', 'DESC');
+  $query->range(0, 3);
+  
+  
+  $res = $query->execute();
+  if($res) {
+    foreach($res as $row) $variables['forums_nids'][] = $row->nid;
+  }
+  
+  
+  // Get 3 featured Tips & Tricks - let's just assume, that it cannot be counted on, that someone has check "featured" or that it "survives"... We use timestamp also
+  $tt_tid = _iby_forums_get_tids_from_names(array("Tips & Tricks"), 2);
+  $tt_tid = array_shift($tt_tid);
+  
+  $query = db_select('forum_index', 'fi');
+  $query->fields('fi', array('nid'));
+  $query->fields('fs', array('field_sticky_value'));
+  $query->addExpression('MAX(last_comment_timestamp)', 'last_comment');
+  $query->condition('fi.tid', $tt_tid);
+  $query->leftJoin('field_data_field_sticky', 'fs', 'fs.entity_id=fi.nid');
+  $query->groupBy('fi.nid');
+  $query->orderBy('field_sticky_value', 'DESC');
+  $query->orderBy('last_comment', 'DESC');
+  $query->range(0, 3);
+  
+  
+  $res = $query->execute();
+  if($res) {
+    foreach($res as $row) $variables['tips_tricks_nids'][] = $row->nid;
+  }
+  
+  return theme('user_dashboard', $variables);
+}
+
+function iby_profiles_pretifier_permission() {
+  $perms = array();
+
+  $perms['user csv export'] = array('title' => "CSV Export of users", 'description' => "Are allowed to extract CSV of all users", 'restrict access' => false);
+  return $perms;
+}
+
+function iby_profiles_pretifier_menu() {
+  $items['dashboard'] = array(
+                              'title' => 'Dashboard',
+                              //'type' => MENU_DEFAULT_LOCAL_TASK,
+                              'page callback' => 'iby_profiles_pretifier_user_dashboard',
+                              'access callback' => '_iby_profile_pretifier_check_access',
+                              //'access arguments' => array('access content'),
+                              );
+  $items['admin/people/export/csv'] = array(
+                                        'title' => 'Export users (CSV)',
+                                        'page callback' => 'iby_profiles_pretifier_user_csv',
+                                        'weight' => 10,
+                                        'type' => MENU_LOCAL_TASK,
+                                        'parent' => 'admin/people',
+                                        'access arguments' => array('user csv export'),
+                                        );
+  return $items;
+}
+
+function _iby_profile_pretifier_check_access() {
+  global $user;
+
+  if(!$user || !$user->uid) return false;
+  return true;
+}
+
+function iby_profiles_pretifier_user_csv() {
+  $seperator = ";";
+  $qualifier = '"';
+  $line_delimiter = "\n";
+
+  $exclude_fields = array('pass', 'theme', 'signature_format', 'timezone', 'language', 'picture', 'init', 'rdf_mapping', 'data');
+  $field_names = array(
+                       'uid' => 'User ID',
+                       'access' => 'Last Access',
+                       'login' => 'Last Login',
+                       'roles' => 'User Groups',
+                       'facts' => 'Fast Facts',
+                       'field_personal_name' => 'Real Name',
+                       'field_personal_address' => 'Address',
+                       'cc' => 'Contact',
+                       'email' => 'E-mail',
+                       'msn' => 'MSN',
+                       'aim' => 'AIM',
+                       'halloffame' => 'Hall of fame',
+                       'bg' => 'Background',
+                       'iam' => 'I am',
+                       'other_more' => 'Other',
+                       'continence' => 'Continence',
+                       'ostomy' => 'Ostomy',
+                       'stomaposition' => 'Stoma position',
+                       'stomashape' => 'Stoma shape',
+                       'stomasurgeryc' => 'Stoma surgery cause',
+                       'currapptype' => 'Current appliance type',
+                       'currappman' => 'Current appliance manufacturer',
+                       'curappcrate' => 'Current appliance change rate',
+                       'skin' => 'Skin condition',
+                       'genhand' => 'General hand function',
+                       'surgeryy' => 'Stoma surgery year',
+                       'issue' => 'Type of continence issue',
+                       'currapptype' => 'Current appliance type',
+                       'appman' => 'Current appliance manufacturer',
+                       'wheelchair' => 'Wheel chair user',
+                       'genhandfunc' => 'General hand function',
+                       'startyear' => 'Start of continence issue',
+                       'field_newsletters' => 'Receive newsletters');
+
+  header("Content-type: application/octet-stream");
+  header("Content-Disposition: attachment; filename=\"users-data.csv\"");
+
+  $iby_categories = iby_profiles_pretifier_user_categories();
+  $categories = array();
+  foreach($iby_categories as $iby_category) {
+    $categories[$iby_category['name']] = $iby_category;
+  }
+
+  // We start out by creating the header line.
+  $csv_header = "";
+  $account = user_load(1);
+
+  $headers = array();
+  foreach($account as $field=>$value) {
+
+    $field_name = "";
+
+    if(!in_array($field, $exclude_fields)) {
+
+      $field_parts = explode('_', $field);
+
+      if(isset($field_names[$field])) {
+        $field_name = $field_names[$field];
+
+      } else {
+
+        if($field_parts[0] == "field") {
+
+          if(count($field_parts) > 2) {
+
+            if(isset($field_parts[1])) {
+              if(isset($field_names[$field_parts[1]])) $field_name = $field_names[$field_parts[1]].": ";
+              else $field_name = ucfirst($field_parts[1]);
+              if(isset($field_names[$field_parts[2]])) $field_name .= $field_names[$field_parts[2]]." ";
+              else $field_name .= ucfirst($field_parts[2]);
+              if(isset($field_names[$field_parts[3]])) $field_name .= $field_names[$field_parts[3]]." ";
+              else $field_name .= ucfirst($field_parts[3]);
+            
+            }
+
+          } else {
+            if(isset($field_names[$field_parts[1]])) $field_name = $field_names[$field_parts[1]].": ";
+            else $field_name = ucfirst($field_parts[1]);
+            if(isset($field_names[$field_parts[2]])) $field_name .= $field_names[$field_parts[2]]." ";
+            else $field_name .= ucfirst($field_parts[2]);
+            if(isset($field_names[$field_parts[3]])) $field_name .= $field_names[$field_parts[3]]." ";
+            else $field_name .= ucfirst($field_parts[3]);
+
+          }
+
+        } else {
+          if(isset($field_names[$field_parts[0]])) $field_name = $field_names[$field_parts[0]].": ";
+          else $field_name = ucfirst($field_parts[0]);
+        }
+      }
+
+      $field_name = preg_replace("/(\r\n|\r)/is", "\n", $field_name);
+      $field_name = trim($field_name);
+      $field_name = str_replace($qualifier, $qualifier.$qualifier, $field_name);
+
+      if((stripos($field_name, $separator) !== false) 
+         || (stripos($field_name, $qualifier) !== false) 
+         || (stripos($field_name, $line_delimiter) !== false)) { 
+        $field_name = $qualifier.$field_name.$qualifier; 
+      } 
+
+      $headers[] = mb_convert_encoding($field_name, "ISO-8859-1", "UTF-8");
+    }
+  }
+
+  echo implode($seperator, $headers).$line_delimiter;
+
+  $result = db_query('SELECT DISTINCT uid FROM users WHERE uid > 0');
+  foreach($result as $res) {
+
+    $column_data = array();
+
+    $account = user_load($res->uid);
+
+    foreach($account as $field=>$value) {
+      if(!in_array($field, $exclude_fields)) {
+    
+        if(isset($value['und'][0])) {
+          $value = $value['und'][0]['value'];
+        }
+        
+        if(in_array($field, array('roles'))) $value = implode(",", $value);
+        
+        if(is_array($value)) {
+          $new_value = "";
+          foreach($value as $new_val) $new_value .= $new_val." ";
+          $value = substr($new_value, 0, -1);
+        }
+        
+        if(in_array($field, array('created', 'access', 'login'))) {
+          $value = date("Y-m-d", $value);
+        }
+
+        $value = preg_replace("/(\r\n|\r)/is", "\n", $value);
+        $value = trim($value);
+        $value = str_replace($qualifier, $qualifier.$qualifier, $value);
+
+        if((stripos($value, $seperator) !== false) 
+            || (stripos($value, $qualifier) !== false) 
+           || (stripos($value, $line_delimiter) !== false)) { 
+          $value = $qualifier.$value.$qualifier;
+        } 
+
+        $column_data[$field] = mb_convert_encoding($value, "ISO-8859-1", "UTF-8");
+      }
+    }
+
+    echo implode($seperator, $column_data).$line_delimiter;
+  }
+  exit;
+}
+
+function iby_profiles_pretifier_user_categories() {
+  $categories = array(
+                      array(
+                            'name' => 'account',
+                            'title' => t('Member profile'),
+                            'link_name' => t('profile'),
+                            'visibility' => t('Visible to all members'),
+                            'iby_fields' => array('field_points', 'field_halloffame', 'field_newsletters'),
+                            'weight' => 1,
+                            ),
+                      array(
+                            'name' => 'picture',
+                            'title' => t('Profile picture'),
+                            'link_name' => t('photo'),
+                            'visibility' => t('Visible to all members'),
+                            'iby_fields' => array(),
+                            'weight' => 2,
+                            ),
+                      array(
+                            'name' => 'signature',
+                            'title' => t('Signature'),
+                            'link_name' => t('signature'),
+                            'visibility' => t('Visible on all your posts'),
+                            'iby_fields' => array(),
+                            'weight' => 3,
+                            ),
+                      array(
+                            'name' => 'facts',
+                            'title' => t('Fast facts'),
+                            'link_name' => t('fast facts'),
+                            'visibility' => t('Visible to all members'),
+                            'weight' => 4,
+                            ),
+                      array(
+                            'name' => 'personal',
+                            'title' => t('Personal info'),
+                            'link_name' => t('personal info'),
+                            'visibility' => t('Only visible to admins'),
+                            'weight' => 5,
+                            ),
+                      array(
+                            'name' => 'bg',
+                            'title' => t('My background'),
+                            'link_name' => t('background info'),
+                            'visibility' => t('Only visible to admins'),
+                            'weight' => 6,
+                            ),
+                      array(
+                            'name' => 'cc',
+                            'title' => t('Communication Channels'),
+                            'link_name' => t('channels'),
+                            'visibility' => t('Visible to all members'),
+                            'weight' => 6,
+                            ),
+                      );
+  return $categories;
+}
+
+function iby_profiles_pretifier_preprocess_user_profile(&$variables) {
+  global $user;
+
+  $account = $variables["elements"]['#account'];
+  $viewer_is_owner = ($user->uid == $account->uid);
+
+  $categories = iby_profiles_pretifier_user_categories();
+
+  foreach($categories as $category) {
+    $variables['user_profile']['fieldgroup_'.$category['name']] = array();
+  }
+  
+  foreach($variables['user_profile'] as $element_name=>$element) {
+    if(preg_match('/field_([^_]+)(_|$)/i', $element_name, $match)) {
+      $field_group = $match[1];
+      if(isset($variables['user_profile']['fieldgroup_'.$field_group])) {
+        unset($element['#object']);
+        $variables['user_profile']['fieldgroup_'.$field_group][$element_name] = $element;
+        unset($variables['user_profile'][$element_name]);
+      }
+    }
+  }
+
+  // Only show values for selected background
+  if($variables['user_profile']['fieldgroup_bg']) {
+    if(isset($variables['user_profile']['fieldgroup_bg']['field_bg_iam'])) {
+      $background = $variables['user_profile']['fieldgroup_bg']['field_bg_iam']['#items'][0]['value'];
+      $keep_fieldgroup = "field_bg_".$background;
+
+      // We'll use a copy to iterate, so we don't change the array we iterate over
+      $fieldgroups = array_keys($variables['user_profile']['fieldgroup_bg']);
+      
+      foreach($fieldgroups as $bg_type) {
+        if(($bg_type != "field_bg_iam") && substr($bg_type, 0, strlen($keep_fieldgroup)) != $keep_fieldgroup)
+          unset($variables['user_profile']['fieldgroup_bg'][$bg_type]);
+      }
+    }
+  }
+
+  foreach($categories as $category) {
+    if(count($variables['user_profile']['fieldgroup_'.$category['name']])) {
+      $variables['user_profile']['fieldgroup_'.$category['name']] += array('#title' => $category['title'],
+                                                                           '#field_group' => $category,
+                                                                           '#type' => "user_profile_category",
+                                                                           '#attributes' => array('class' => array("user-member")),
+                                                                           '#weight' => $category['weight'],
+                                                                           '#access' => true,
+                                                                           '#theme_wrappers' => array("user_profile_category"),
+                                                                           '#uid' => $variables['elements']['#account']->uid,
+                                                                           );
+    }
+  }
+
+  // Remove stuff we don't want to show on the profile page
+  if(isset($variables['user_profile']['fieldgroup_cc']))
+    unset($variables['user_profile']['fieldgroup_cc']);
+  if(isset($variables['user_profile']['summary']))
+    unset($variables['user_profile']['summary']);
+  if(isset($variables['user_profile']['field_profile']))
+    unset($variables['user_profile']['field_profile']);
+  if(isset($variables['user_profile']['field_new_profile']))
+    unset($variables['user_profile']['field_new_profile']);
+  if(isset($variables['user_profile']['field_newsletters']))
+    unset($variables['user_profile']['field_newsletters']);
+
+  // Remove stuff, if not admin or the user itself
+  if(!$viewer_is_owner && !sqtools_is_admin($user)) {
+    if(isset($variables['user_profile']['fieldgroup_bg']))
+      unset($variables['user_profile']['fieldgroup_bg']);
+    if(isset($variables['user_profile']['fieldgroup_personal']))
+      unset($variables['user_profile']['fieldgroup_personal']);
+  }
+
+}
+
+function iby_profiles_pretifier_user_view($account, $view_mode = 'full', $langcode = NULL) {
+  $langcode = $GLOBALS['language_content']->language;
+
+  // Remove previously built content, if exists.
+  $account->content = array();
+
+  foreach($account as $name=>$element) {
+    if((substr($name, 0, strlen('field_')) == 'field_') && (!is_array($element) || !count($element))) {
+      if(!isset($account->{$name}) || !is_array($account->{$name}) || !count($account->{$name}))
+        $account->{$name}['und'][0]['value'] = false;
+    }
+  }
+
+  field_attach_prepare_view('user', array($account->uid => $account), $view_mode, $langcode);
+  entity_prepare_view('user', array($account->uid => $account), $langcode);
+  $account->content += field_attach_view('user', $account, $view_mode, $langcode);
+}
+
+function iby_profiles_pretifier_user_profile_form_submit(&$form, &$form_state) {
+  global $user;
+
+  $account = user_load($form['#user']->uid);
+
+  if(isset($form_state['build_info']['args'][0]->picture_upload) && $form_state['build_info']['args'][0]->picture_upload) {
+    $tmp_path = file_directory_temp().str_replace("temporary://", "/", $form_state['build_info']['args'][0]->picture_upload->uri);
+    $data = @file_get_contents($tmp_path);
+    if($data) {
+      $extension = "";
+      if(strrpos($form_state['build_info']['args'][0]->uri, "."))
+        $extension = substr($form_state['build_info']['args'][0]->uri, strrpos($form_state['build_info']['args'][0]->uri, "."));
+
+      $dest = "public://pictures/picture-".$form_state['build_info']['args'][0]->picture_upload->uid."-".time().$extension;
+      $res = file_save_data($data, $dest, FILE_EXISTS_RENAME);
+
+      if($res && $res->fid) {
+        $account = user_load($form_state['build_info']['args'][0]->picture_upload->uid);
+        $account->picture->fid = $res->fid;
+        user_save($account);
+      }
+    }
+  } elseif(isset($form_state['input']['picture_delete']) && $form_state['input']['picture_delete']) {
+    //unset($form['#user']->picture);
+    $account = user_load($form['#user']->uid);
+    $account->picture->fid = 0;
+    user_save($account);
+
+  } elseif(isset($form_state['input']['signature']['value'])) {// && $form_state['input']['signature']['value']) {
+    $signature = $form_state['input']['signature']['value'];
+    $lines = preg_split("/(\r\n|\r|\n)/", $signature);
+    if(count($lines) > 10) {
+      $lines = array_slice($lines, 0, 10);
+      $signature = trim(implode("\n", $lines));
+    }
+
+    $account = user_load($form['#user']->uid);
+    $account->signature = $signature;
+
+    user_save($account);
+  }
+
+  if(isset($form_state['build_info']['args'][0]->roles_alt) && is_array($form_state['build_info']['args'][0]->roles_alt)) {
+    $account = user_load($form['#user']->uid);
+
+    if(user_access("administer users", $user) || user_access("administer permissions", $user)) {
+      foreach($form_state['build_info']['args'][0]->roles_alt as $rid=>$set_val) {
+        if(sqtools_is_admin($user) || (!sqtools_is_admin($user) && $rid != 3)) {
+          if($rid == $set_val) $account->roles[$rid] = $rid;
+          else unset($account->roles[$rid]);
+        }
+      }
+      user_save($account);
+    }
+  }
+
+  if(isset($form_state['build_info']['args'][0]->field_profile) && is_array($form_state['build_info']['args'][0]->field_profile)) {
+    if(user_access("administer users", $user) || user_access("administer permissions", $user)) {
+      $account = user_load($form['#user']->uid);
+      $account->field_profile = $form_state['build_info']['args'][0]->field_profile;
+      user_save($account);
+    }
+  }
+  
+  //if(isset($form_state['build_info']['args'][0]->field_new_profile) && is_array($form_state['build_info']['args'][0]->field_new_profile)) {
+  //  if(user_access("administer users", $user) || user_access("administer permissions", $user)) {
+  //    $account = user_load($form['#user']->uid);
+  //    $account->field_new_profile = $form_state['build_info']['args'][0]->field_new_profile;
+  //    user_save($account);
+  //  }
+  //}
+  
+
+  //field
+  //echo "<pre>"; var_dump($account); echo "</pre>"; exit;
+  //echo "<pre>"; var_dump($form_state); echo "</pre>"; exit;
+
+  if($form_state['complete form']['#user_category'] != "bg") {
+    $form_state["redirect"] = "user/".$form_state['build_info']['args'][0]->uid;
+  }
+
+  //if(isset($_GET['pass-reset-token'])) $form_state["redirect"] = "<front>";
+
+  return $form;
+}
+
+function iby_profiles_pretifier_validate_new_password($form, &$form_state) {
+  if(!trim($form['account']['pass']['#value']['pass1']) || (strlen($form['account']['pass']['#value']['pass1']) < 6))
+    form_set_error('password', t('Your password must have at least characters.'));
+}
+
+
+function iby_profiles_pretifier_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
+  global $user;
+
+  $categories = iby_profiles_pretifier_user_categories();
+  //field_attach_form('user', $form_state['user'], $form, $form_state);
+
+  $account = $form['#user'];
+
+  user_account_form($form, $form_state);
+  field_attach_form('user', $account, $form, $form_state);
+  
+  //unset($form_state['build_info']['args'][0]->timezone);//echo "<pre>"; var_dump($form_state);exit;
+  
+  $category_indexes = array();
+  foreach($categories as $index=>$category) $category_indexes[$category['name']] = $index;
+
+  if(isset($form["#user_category"]) && $form["#user_category"]) {
+    $category_index = $category_indexes[$form["#user_category"]];
+    $category = $categories[$category_index];
+
+    $dont_remove_fields = array('theme', 'created', 'field_profile', 'field_new_profile', 'access', 'login', 'pass', 'mail', 'signature', 'signature_format', 'status', 'language', 'picture', 'init', 'data', 'roles', 'rdf_mapping', 'privatemsg_disabled');
+
+    if(isset($category['iby_fields']) && count($category['iby_fields']))
+      $dont_remove_fields = array_merge($dont_remove_fields, $category['iby_fields']);
+
+    $prefix = "field_".$form["#user_category"];
+    foreach($form['#user'] as $element_name=>$element) {
+      $element_prefix = substr($element_name, 0, strlen($prefix));
+      if( ($element_prefix != $prefix) && !in_array($element_name, $dont_remove_fields) ) unset($form[$element_name]);
+    }
+
+    switch($form["#user_category"]) {
+    case 'account':
+      $form['account']['current_pass_required_values']['#value'] = array();//'pass'=>"Password");
+
+      //unset($form['account']['current_pass_required_values']);
+      unset($form['account']['current_pass']);
+      //unset($form['account']['pass']);
+
+      if(!sqtools_is_admin($user) && !in_array('cp_adm', array_values($user->roles)) && !in_array('content_adm', array_values($user->roles)))
+        unset($form['account']['name']);
+
+      if(!user_access("administer users", $user) && !user_access("administer permissions", $user)) {
+        unset($form['account']['roles']);
+        unset($form['account']['status']);
+        unset($form['field_halloffame']);
+        unset($form['field_points']);
+        //unset($form['field_profile']);
+        //unset($form['field_new_profile']);
+      } else {
+        if(!sqtools_is_admin($user)) {
+          $admin_index = array_search(3, $form['account']['roles']['#default_value']);
+          if($admin_index)
+            unset($form['account']['roles']['#default_value'][$admin_index]);
+          unset($form['account']['roles']['#options'][3]);
+        }
+
+      }
+
+      if(isset($_GET['pass-reset-token'])) {
+        $newValidators = array('iby_profiles_pretifier_validate_new_password');
+        foreach($form['#validate'] as $index=>$validator) {
+          if(in_array($validator, array("user_validate_current_pass", "user_profile_form_validate"))) $newValidators[] = $validator;
+        }
+        $form['#validate'] = $newValidators;
+        unset($form['account']['mail']);
+        unset($form['pm_send_notifications']);
+        unset($form['field_new_profile']);
+        unset($form['field_profile']);
+        unset($form['field_newsletters']);
+        unset($form['privatemsg']);
+        unset($form["#pre_render"]);
+
+        $form['#attributes'] = array('class' => 'pass-reset-form');
+
+      } else {
+        if(isset($form['account']['roles'])) $form['account']['roles_alt'] = $form['account']['roles'];
+        unset($form['account']['roles']);
+
+        if(isset($form['field_new_profile']['und']['#default_value']) && is_array($form['field_new_profile']['und']['#default_value']))
+          unset($form['field_profile']);
+      }
+
+
+      unset($form['account']['notify']);
+      unset($form['signature_settings']);
+      unset($form['picture']);
+      unset($form['picture_current']);
+      unset($form['picture_delete']);
+      unset($form['picture_upload']);
+
+      break;
+
+    case 'picture':
+      //$form['account']['current_pass_required_values']['#value'] = array();//'pass'=>"Password");
+
+      $func_index = array_search("user_validate_current_pass", $form['#validate']);
+      if($func_index) unset($form['#validate'][$func_index]);
+      //$form['#action'] = "/user/".$account->uid."/edit";
+
+      unset($form['account']['name']);
+      unset($form['account']['mail']);
+      unset($form['account']['current_pass_required_values']);
+      unset($form['account']['current_pass']);
+      unset($form['account']['pass']);
+      unset($form['account']['status']);
+      unset($form['account']['roles']);
+      unset($form['account']['notify']);
+      unset($form['signature_settings']);
+      unset($form['field_profile']);
+      unset($form['field_new_profile']);
+      break;
+
+    case 'signature':
+
+      $func_index = array_search("user_validate_current_pass", $form['#validate']);
+      if($func_index) unset($form['#validate'][$func_index]);
+
+      unset($form['account']['name']);
+      unset($form['account']['mail']);
+      unset($form['account']['current_pass_required_values']);
+      unset($form['account']['current_pass']);
+      unset($form['account']['pass']);
+      unset($form['account']['status']);
+      unset($form['account']['roles']);
+      unset($form['account']['notify']);
+      unset($form['picture']);
+      unset($form['picture_current']);
+      unset($form['picture_delete']);
+      unset($form['picture_upload']);
+      unset($form['field_profile']);
+      unset($form['field_new_profile']);
+      $form['signature_settings']['signature']['#format'] = "plain_text";
+      break;
+
+    case 'facts':
+      $func_index = array_search("user_validate_current_pass", $form['#validate']);
+      if($func_index) unset($form['#validate'][$func_index]);
+
+      unset($form['account']['name']);
+      unset($form['account']['mail']);
+      unset($form['account']['current_pass_required_values']);
+      unset($form['account']['current_pass']);
+      unset($form['account']['pass']);
+      unset($form['account']['status']);
+      unset($form['account']['roles']);
+      unset($form['account']['notify']);
+      unset($form['signature_settings']);
+      unset($form['picture']);
+      unset($form['picture_current']);
+      unset($form['picture_delete']);
+      unset($form['picture_upload']);
+      unset($form['field_profile']);
+      unset($form['field_new_profile']);
+      break;
+
+    case 'personal':
+      $func_index = array_search("user_validate_current_pass", $form['#validate']);
+      if($func_index) unset($form['#validate'][$func_index]);
+
+      unset($form['account']['name']);
+      unset($form['account']['mail']);
+      unset($form['account']['current_pass_required_values']);
+      unset($form['account']['current_pass']);
+      unset($form['account']['pass']);
+      unset($form['account']['status']);
+      unset($form['account']['roles']);
+      unset($form['account']['notify']);
+      unset($form['signature_settings']);
+      unset($form['picture']);
+      unset($form['picture_current']);
+      unset($form['picture_delete']);
+      unset($form['picture_upload']);
+      unset($form['field_profile']);
+      unset($form['field_new_profile']);
+      break;
+
+    case 'bg':
+
+      $func_index = array_search("user_validate_current_pass", $form['#validate']);
+      if($func_index) unset($form['#validate'][$func_index]);
+      unset($form['account']['name']);
+      unset($form['account']['mail']);
+      unset($form['account']['current_pass_required_values']);
+      unset($form['account']['current_pass']);
+      unset($form['account']['pass']);
+      unset($form['account']['status']);
+      unset($form['account']['roles']);
+      unset($form['account']['notify']);
+      unset($form['signature_settings']);
+      unset($form['picture']);
+      unset($form['picture_current']);
+      unset($form['picture_delete']);
+      unset($form['picture_upload']);
+      unset($form['field_profile']);
+      unset($form['field_new_profile']);
+
+      $iam = $account->field_bg_iam['und'][0]['value'];
+
+      if($iam == "continence") {
+        foreach($form['#user'] as $element_name=>$element) {
+          if(substr($element_name, 0, 15) == "field_bg_ostomy") unset($form[$element_name]);
+          elseif(substr($element_name, 0, 14) == "field_bg_other") unset($form[$element_name]);
+        }
+
+      } elseif($iam == "ostomy") {
+        foreach($form['#user'] as $element_name=>$element) {
+          if(substr($element_name, 0, 19) == "field_bg_continence") unset($form[$element_name]);
+          elseif(substr($element_name, 0, 14) == "field_bg_other") unset($form[$element_name]);
+        }
+
+
+      } elseif($iam == "all") {
+        foreach($form['#user'] as $element_name=>$element) {
+          if(substr($element_name, 0, 14) == "field_bg_other") unset($form[$element_name]);
+        }
+
+      } elseif($iam == "other") {
+        foreach($form['#user'] as $element_name=>$element) {
+          if(substr($element_name, 0, 15) == "field_bg_ostomy") unset($form[$element_name]);
+          elseif(substr($element_name, 0, 19) == "field_bg_continence") unset($form[$element_name]);
+        }
+
+      } else {
+        foreach($form['#user'] as $element_name=>$element) {
+          if(substr($element_name, 0, 15) == "field_bg_ostomy") unset($form[$element_name]);
+          elseif(substr($element_name, 0, 19) == "field_bg_continence") unset($form[$element_name]);
+          elseif(substr($element_name, 0, 14) == "field_bg_other") unset($form[$element_name]);
+        }
+      }
+
+      break;
+
+    case 'cc':
+      $func_index = array_search("user_validate_current_pass", $form['#validate']);
+      if($func_index) unset($form['#validate'][$func_index]);
+      unset($form['account']['name']);
+      unset($form['account']['mail']);
+      unset($form['account']['current_pass_required_values']);
+      unset($form['account']['current_pass']);
+      unset($form['account']['pass']);
+      unset($form['account']['status']);
+      unset($form['account']['roles']);
+      unset($form['account']['notify']);
+      unset($form['signature_settings']);
+      unset($form['picture']);
+      unset($form['picture_current']);
+      unset($form['picture_delete']);
+      unset($form['picture_upload']);
+      break;
+
+    }
+
+    //array_unshift($form['#submit'], 'iby_profiles_pretifier_user_profile_form_submit');
+    $form['#submit'][] = 'iby_profiles_pretifier_user_profile_form_submit';
+    //$form['actions']['cancel']['#weight'] = 1;
+    //$form['actions']['submit']['#weight'] = 2;
+
+    return;
+  }
+
+}
+
+//iby_forums_form_comment_node_forum_form_alter(&$form, &$form_state, $form_id) {
+
+
+// Not being used right now - it's here for later use, if wanted...
+function iby_profiles_pretifier_form_user_register_check_email($input) {
+  $site_email = variable_get('site_mail', '');
+
+  $mail = $input['#value'];
+
+  $mail_parts = explode("@", $mail, 2);
+
+  $mxhosts = array();
+  getmxrr($mail_parts[1], $mxhosts);
+  
+  $mxhost = array_shift($mxhosts);
+  
+  $smtp = new SMTP;
+  //$smtp->do_debug = 20;
+  $smtp->Connect($mxhost);
+  $smtp->Hello($mail_parts[1]);
+
+
+  if(($smtp->Verify2($site_email, $mail) != 250) && ($smtp->Verify($mail_parts[0]) != 250)) {
+    form_set_error('mail', t('The e-mail address entered could not be verified.'));
+  }
+}
+
+function iby_profiles_pretifier_form_user_register_validate_email($input) {
+  if(!preg_match("/.+@[a-z0-9-][a-z0-9-\.]*\.[a-z0-9-]+/i", $input['#value'])) {
+    form_set_error('mail', t('The e-mail address entered could not be verified.'));
+  }
+}
+
+function iby_profiles_pretifier_form_user_register_form_alter(&$form, &$form_state) {
+  $form['account']['mail']['#element_validate'][] = "iby_profiles_pretifier_form_user_register_validate_email";
+}
+
+function iby_profiles_pretifier_get_total_posts(&$account=false) {
+  global $user;
+  if(!$account) $account = $user;
+  
+  $counter = 0;
+  $counter += db_select("comment", 'c')->fields('c')->condition('c.uid', $account->uid)->execute()->rowCount();
+  $counter += db_select("node", 'n')->fields('n')->condition('n.uid', $account->uid)->execute()->rowCount();
+  $counter += db_select("field_data_field_creator_uid", 'c')->fields('c')->condition('c.field_creator_uid_value', $account->uid)->execute()->rowCount();
+  return $counter;
+}

@@ -1,0 +1,7 @@
+name = AJAX Popup Module
+description = Enables a simple way to create AJAX popups
+package = Modules created by Socialsquare
+core = 7.x
+files[] = sq_ajax_popup.module
+scripts[] = js/script.js
+scripts[] = js/jquery.tools.overlay.min.js

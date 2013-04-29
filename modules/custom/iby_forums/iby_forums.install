@@ -1,0 +1,61 @@
+<?php
+function iby_forums_install() {
+  // Set the weight of the sq_forum_extender.module to 2 so it is loaded after the taxonomy.module AND the forum.module.
+  db_update('system')
+    ->fields(array('weight' => 2))
+    ->condition('name', 'iby_forums')
+    ->execute();
+}
+
+function iby_forums_uninstall() {
+  drupal_uninstall_schema('iby_forum_flags_cache');
+}
+
+function iby_forums_enable() {
+  if(!db_table_exists('iby_forum_flags_cache')) {
+    drupal_install_schema('iby_forum_flags_cache');
+  }
+  db_update('system')
+    ->fields(array('weight' => 2))
+    ->condition('name', 'iby_forums')
+    ->execute();
+}
+
+
+function iby_forums_schema() {
+  $schema['iby_forum_vip_members'] = array(
+                                           'description' => 'Holds timestamps for VIP member additions',
+                                           'fields' => array(
+                                                             'tid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+                                                             'uid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+                                                             'timestamp' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+                                                             ),
+                                           'primary key' => array('tid', 'uid'),
+                                           );
+
+  $schema['iby_forum_flags_cache'] = array(
+                                           'description' => 'Holds the sq_flags cache for iby forums',
+                                           'fields' => array(
+                                                             'flag_type' => array('type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => 'flag'),
+                                                             'entity_type' => array('type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => 'node'),
+                                                             'entity_id' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+                                                             'total' => array('type' => 'int', 'unsigned' => TRUE, 'default' => 0),
+                                                             'expire' => array('type' => 'int', 'unsigned' => TRUE, 'default' => 0),
+                                                             ),
+                                           'primary key' => array('flag_type', 'entity_type', 'entity_id'),
+                                           );
+
+  $schema['iby_forum_tags_cache'] = array(
+                                          'description' => 'Holds the tags cache for iby forums',
+                                          'fields' => array(
+                                                            'field_tags_tid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE, 'default' => 0),
+                                                            'tid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE, 'default' => 0),
+                                                            'nid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE, 'default' => 0),
+                                                            'cid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE, 'default' => 0),
+                                                            'pcid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE, 'default' => 0),
+                                                            'expire' => array('type' => 'int', 'unsigned' => TRUE, 'default' => 0),
+                                                            ),
+                                           'primary key' => array('field_tags_tid', 'tid', 'nid', 'cid', 'pcid'),
+                                          );
+  return $schema;
+}

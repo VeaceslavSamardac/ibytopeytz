@@ -1,0 +1,46 @@
+.chat-forums-forum { margin-right: 9px; }
+.comment-box { height: 605px; padding-left: 20px; padding-right: 20px; }
+
+body.front .navi { margin-top: 3px; }
+
+body.page-messages .action-links { padding-top: 15px; }
+
+.ibyforum-topic-list .ibyforum-stats { padding: 15px 0 26px 0; }
+
+.ibyforum-topic-grid { margin-left: 12px; }
+
+.chat-forums-forum { width: 178px; }
+
+.iby_search { padding: 9px 10px 0 10px; height: 24px; }
+
+#main-menu { padding-top: 2px; }
+
+body.page-dashboard .panes { height: 470px; }
+.dashboard_slide {height: 398px !important; }
+
+.post_info {
+	margin-right: 10px;
+	font-size: 11px;
+}
+
+.footerContentWrapper { height: 255px; }
+.footerContent { height: 115px; }
+
+input { filter: none; }
+.rounded-button a { filter: none; }
+
+.challenges-grid .challenges-name { height: 39px; }
+
+.box-shadow { box-shadow: none; background-color: #fff; }
+
+/*
+.add-comment-content { height: 490px; }
+.comment-box { height: 480px; }
+
+#add-topic-content { background-color: #fff; }
+*/
+
+.chat-forums-large-box { background-color: #F8F6F1; }
+.tips-tricks-large-box { background-color: #F8F6F1; }
+.challenges-large-box { background-color: #F8F6F1; }
+.vip-rooms-large-box { background-color: #F8F6F1; }

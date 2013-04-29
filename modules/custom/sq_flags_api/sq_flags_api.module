@@ -1,0 +1,352 @@
+<?php
+/** 
+ * @file 
+ * Socialsquare Flags API module code
+ */
+
+/* Hooks */
+
+// Theme hooks
+function sq_flags_api_theme() {
+  $themes = array('flags' => array('template' => "flags"),
+                  'flags_list' => array('template' => "flags-list")
+                  );
+
+  return $themes;
+}
+
+// Menu links
+function sq_flags_api_menu() {
+  $items = array();
+  $items['sq_flags_api/add/%'] = array(
+    'page callback' => 'sq_flags_api_ajax_add',
+    'page arguments' => array(2),
+    //'access arguments' => TRUE,
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  $items['sq_flags_api/delete/%'] = array(
+    'page callback' => 'sq_flags_api_ajax_delete',
+    'page arguments' => array(2),
+    //    'access arguments' => TRUE,
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  $items['sq_flags_api/toggle/%'] = array(
+    'page callback' => 'sq_flags_api_ajax_toggle',
+    'page arguments' => array(2),
+    //    'access arguments' => TRUE,
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
+
+  //sq_flags_api/like/entity_type
+
+  //sq_flags_api/like/group/flags_group
+
+  //function sq_flags_api_show_list($flag_type, $flag_group=false) {
+
+  $items['user/flags/%'] = array(
+    'page callback' => 'sq_flags_api_show_list',
+    'page arguments' => array(2),
+    'access arguments' => TRUE,
+    'access callback' => TRUE,
+  );
+  $items['user/flags/%/%'] = array(
+    'page callback' => 'sq_flags_api_show_list',
+    'page arguments' => array(2, false, 3),
+    'access arguments' => TRUE,
+    'access callback' => TRUE,
+  );
+
+  return $items;
+}
+
+
+
+//function template_preprocess_flags(&$variables) {
+//  //echo "<pre>";var_dump($variables);exit;
+//  //if(isset($variables['flag_type']) && $variables['flag_type']) {
+//  //  $variables['theme_hook_suggestions'][] = 'flags__' . $variables['flag_type'];
+//  //
+//  //  if(isset($variables['entity_type']) && $variables['entity_type'])
+//  //    $variables['theme_hook_suggestions'][] = 'flags__' . $variables['flag_type'] . '__' . $variables['entity_type'];
+//  //}
+//  //echo "preprocess_flags";
+//  //$variables['flags'] = theme('flags_list', $variables);
+//  //$variables['forums'] = theme('forum_list', $variables);
+//  //$variables['topics'] = theme('forum_topic_list', $variables);
+//}
+
+function template_preprocess_flags_list(&$variables) {
+  $variables['theme_hook_suggestions'][] = 'flags_list__flags';
+
+  if(isset($variables['flag_type']) && $variables['flag_type']) {
+    $variables['theme_hook_suggestions'][] = 'flags_list__' . $variables['flag_type'];
+
+    if(isset($variables['entity_type']) && $variables['entity_type'])
+      $variables['theme_hook_suggestions'][] = 'flags_list__' . $variables['flag_type'] . '__' . $variables['entity_type'];
+
+    if(isset($variables['flag_group']) && $variables['flag_group'])
+      $variables['theme_hook_suggestions'][] = 'flags_list__' . $variables['flag_type'] . '__' . $variables['flag_group'];
+
+    if(isset($variables['entity_type']) && $variables['entity_type'] && isset($variables['flag_group']) && $variables['flag_group'])
+      $variables['theme_hook_suggestions'][] = 'flags_list__' . $variables['flag_type'] . '__' . $variables['flag_group'] . '__' .$variables['entity_type'];
+  }
+}
+
+function sq_flags_api_show_list($flag_type, $flag_group=false) {
+  global $user;
+
+  $flag_group = ''; $entity_type = '';
+
+  if(func_num_args() == 1) list($flag_type) = func_get_args();
+  elseif(func_num_args() == 2) list($flag_type, $entity_type) = func_get_args();
+  elseif(func_num_args() == 3) list($flag_type, $group_dummy, $flag_group) = func_get_args();
+  elseif(func_num_args() == 4) list($flag_type, $group_dummy, $flag_group, $entity_type) = func_get_args();
+
+  if($flag_group == "user") {
+    $flag_group = "";
+    $entity_type = "user";
+  }
+
+  $values = array('flag_type' => $flag_type, 'flag_group' => $flag_group, 'entity_type' => $entity_type);
+
+  $flags = sq_flags_api_get_multiple($values);
+
+  // We start by getting the objects from the api
+  $flags = sq_flags_api_get_multiple(array('uid' => $user->uid, 'flag_type' => $flag_type, 'flag_group' => $flag_group, 'entity_type' => $entity_type));
+
+  // Then we call the general flags_list theme, which will take care of the rest
+  return theme('flags', array('flag_type' => $flag_type, 'entity_type' => $entity_type, 'flags' => $flags));
+}
+
+function sq_flags_api_ajax_toggle() {
+  global $user;
+
+  $flag_group = '';
+  if(func_num_args() == 3) list($flag_type, $entity_type, $entity_id) = func_get_args();
+  elseif(func_num_args() == 4) list($flag_type, $flag_group, $entity_type, $entity_id) = func_get_args();
+
+  $args = array('flag_type' => $flag_type, 'uid' => $user->uid, 'flag_group' => $flag_group, 'entity_type' => $entity_type, 'entity_id' => $entity_id);
+  $is_set = (sq_flags_api_get($args) ? true : false);
+
+  if($is_set) $res = sq_flags_api_delete($args);
+  else $res = sq_flags_api_set($args);
+
+  $commands = array();
+  if(!$res) $commands[] = ajax_command_alert('ERROR: An unknown error occured - please try again later...');
+
+  if(isset($_GET['sq_flags_api_cb']) && $_GET['sq_flags_api_cb']) {
+
+    if(isset($args['uid'])) unset($args['uid']);
+    $count = sq_flags_api_get_count($args);
+
+    $args = array('success'=>true, 'new_count'=>$count , 'action'=>(($is_set)?'delete':'add'), 'flag_type' => $flag_type, 'flag_group' => $flag_group, 'entity_type' => $entity_type, 'entity_id' => $entity_id);
+    $commands[] = ajax_command_invoke(NULL, $_GET['sq_flags_api_cb'], array($args));
+  }
+
+  $page = array('#type' => 'ajax', '#commands' => $commands);
+  ajax_deliver($page);
+}
+
+function sq_flags_api_ajax_add() {
+  $flag_group = '';
+  if(func_num_args() == 3) list($flag_type, $entity_type, $entity_id) = func_get_args();
+  elseif(func_num_args() == 4) list($flag_type, $flag_group, $entity_type, $entity_id) = func_get_args();
+
+  $values = array('flag_type' => $flag_type, 'flag_group' => $flag_group, 'entity_type' => $entity_type, 'entity_id' => $entity_id);
+  $res = sq_flags_api_set($values);
+
+  $commands = array();
+  if(!$res) $commands[] = ajax_command_alert('ERROR: An unknown error occured - please try again later...');
+
+  if(isset($_GET['sq_flags_api_cb']) && $_GET['sq_flags_api_cb']) {
+    $args = array('success'=>true, 'action'=>'add', 'flag_type' => $flag_type, 'flag_group' => $flag_group, 'entity_type' => $entity_type, 'entity_id' => $entity_id);
+    $commands[] = ajax_command_invoke(NULL, $_GET['sq_flags_api_cb'], array($args));
+  }
+
+  $page = array('#type' => 'ajax', '#commands' => $commands);
+  ajax_deliver($page);
+}
+
+function sq_flags_api_ajax_delete() {
+  $flag_id = '';  $flag_group = '';
+
+  if(func_num_args() == 1) list($flag_id) = func_get_args();
+  elseif(func_num_args() == 3) list($flag_type, $entity_type, $entity_id) = func_get_args();
+  elseif(func_num_args() == 4) list($flag_type, $flag_group, $entity_type, $entity_id) = func_get_args();
+
+  $values = array('flag_id' => $flag_id, 'flag_type' => $flag_type, 'flag_group' => $flag_group, 'entity_type' => $entity_type, 'entity_id' => $entity_id);
+  $res = sq_flags_api_delete($values);
+
+  $commands = array();
+  if(!$res) $commands[] = ajax_command_alert('ERROR: An unknown error occured - please try again later...');
+
+  if(isset($_GET['sq_flags_api_cb']) && $_GET['sq_flags_api_cb']) {
+    $args = array('success'=>true, 'action'=>'delete', 'flag_type' => $flag_type, 'flag_group' => $flag_group, 'entity_type' => $entity_type, 'entity_id' => $entity_id);
+    $commands[] = ajax_command_invoke(NULL, $_GET['sq_flags_api_cb'], array($args));
+  }
+
+  $page = array('#type' => 'ajax', '#commands' => $commands);
+  ajax_deliver($page);
+  //echo "<pre>";var_dump($flag_type, $entity_type, $entity_id);exit;
+}
+
+
+/* API Functions */
+
+// Getters
+
+function sq_flags_api_get($args) {
+  $res = false;
+  if(is_array($args)) {
+    if(isset($args['flag_id']) && $args['flag_id']) $args['flag_ids'] = array($args['flag_id']);
+    if(isset($args['entity_id']) && $args['entity_id']) $args['entity_ids'] = array($args['entity_id']);
+    $res = sq_flags_api_get_multiple($args);
+  }
+  return ($res) ? $res[0] : false;
+}
+
+function sq_flags_api_get_multiple($args) {
+  global $user;
+  $keys = array('flag_type' => false, 'uid' => false, 'entity_type' => false, 'entity_ids' => false);
+  if(is_array($args)) $keys = $args + $keys;
+  $res = false;
+
+  if(isset($keys['flag_ids']) && is_array($keys['flag_ids'])) {
+    $res = db_select('sq_flags', 'sqf')
+      ->fields('sqf')
+      ->condition('flag_id', $keys['flag_ids'], "IN")
+      ->execute()
+      ->fetchAll();
+
+  } else {
+    $query = db_select('sq_flags', 'sqf');
+    $query->fields('sqf');
+
+    if(isset($keys['flag_type']) && $keys['flag_type'])
+      $query->condition('flag_type', $keys['flag_type']);
+ 
+    if(isset($keys['uid']) && $keys['uid'])
+      $query->condition('uid', $keys['uid']);
+    
+    if(isset($keys['flag_group']) && $keys['flag_group'])
+      $query->condition('flag_group', $keys['flag_group']);
+    
+    if(isset($keys['entity_type']) && $keys['entity_type'])
+      $query->condition('entity_type', $keys['entity_type']);
+    
+    if(isset($keys['entity_ids']) && is_array($keys['entity_ids']))
+      $query->condition('entity_id', $keys['entity_ids'], "IN");
+    
+    $res = $query->execute()->fetchAll();
+  }
+
+  return ($res) ? $res : false;
+}
+
+// Get counts
+function sq_flags_api_get_count($args) {
+  if(is_array($args)) {
+    if(isset($args['entity_id']) && $args['entity_id']) $args['entity_ids'] = array($args['entity_id']);
+    return sq_flags_api_get_multiple_count($args);
+  }
+  return 0;
+}
+
+function sq_flags_api_get_multiple_count($args) {
+  global $user;
+  $keys = array('flag_type' => false, 'uid' => false, 'entity_type' => false, 'entity_ids' => false);
+  if(is_array($args)) $keys = $args + $keys;
+
+  $query = db_select('sq_flags', 'sqf');
+  $query->addExpression('COUNT(flag_id)', 'counter');
+  
+  if(isset($keys['flag_type']) && $keys['flag_type'])
+    $query->condition('flag_type', $keys['flag_type']);
+  
+  if(isset($keys['uid']) && $keys['uid'])
+    $query->condition('uid', $keys['uid']);
+  
+  if(isset($keys['flag_group']) && $keys['flag_group'])
+    $query->condition('flag_group', $keys['flag_group']);
+  
+  if(isset($keys['entity_type']) && $keys['entity_type'])
+    $query->condition('entity_type', $keys['entity_type']);
+  
+  if(isset($keys['entity_ids']) && is_array($keys['entity_ids']))
+    $query->condition('entity_id', $keys['entity_ids'], 'IN');
+  
+  if(($args['flag_type'] == 'view') && ($args['entity_id'] == 17711) && ($args['entity_type'] == 'taxonomy_term')) {
+    //echo "<pre>"; var_dump($query->__toString()); echo "</pre>"; exit;
+  }
+
+  return intval($query->execute()->fetchField(0));
+}
+
+// Set
+
+function sq_flags_api_set($args) {
+  global $user;
+  $keys = array('flag_type' => "flag", 'flag_group' => "", 'uid' => $user->uid, 'entity_type' => "", 'entity_id' => false);
+  if(is_array($args)) $keys = $args + $keys;
+
+  $query = false; $res = false;
+
+  if($keys['entity_type'] && $keys['entity_id']) {
+    $fields = $keys;
+    $fields['timestamp'] = time();
+    $query = db_insert('sq_flags')
+      ->fields($fields);
+  }
+  if($query) {
+    module_invoke_all('sq_flags_set_before', $query, $keys);
+    $res = $query->execute();
+  }
+  if($res) module_invoke_all('sq_flags_set_after', $keys);
+  return ($res) ? true : false;
+}
+
+
+// Delete - is multiple needed?
+
+function sq_flags_api_delete($args) {
+  global $user;
+  $keys = array('flag_type' => "flag", 'flag_group' => "", 'uid' => 0, 'entity_type' => 'node', 'entity_id' => false);
+  if(is_array($args)) $keys = $args + $keys;
+
+  $query = false; $res = false;
+
+  if(isset($keys['flag_id']) && $keys['flag_id']) {
+    $query = db_delete('sq_flags')->condition('flag_id', $keys['flag_id']);
+    
+  } elseif($keys['entity_type'] && $keys['entity_id']) {
+    $query = db_delete('sq_flags');
+
+    $db_and = db_and();
+    $db_and->condition('flag_type', $keys['flag_type'])
+      ->condition('uid', $keys['uid'])
+      ->condition('entity_type', $keys['entity_type'])
+      ->condition('entity_id', $keys['entity_id'])
+      ->condition('flag_group', $keys['flag_group']);
+
+    $query->condition($db_and);
+  }
+
+  if($query) {
+    module_invoke_all('sq_flags_delete_before', $query, $keys);
+    $res = $query->execute();
+  }
+  if($res) module_invoke_all('sq_flags_delete_after', $keys);
+
+  return ($res) ? true : false;
+}
+
+function sq_flags_api_cron() {
+  $res = db_query("DELETE FROM sq_flags WHERE entity_type='node' AND entity_id NOT IN (SELECT nid FROM node)");
+  $res = db_query("DELETE FROM sq_flags WHERE entity_type='comment' AND entity_id NOT IN (SELECT cid FROM comment)");
+  $res = db_query("DELETE FROM sq_flags WHERE entity_type='taxonomy_term' AND entity_id NOT IN (SELECT tid FROM taxonomy_term_data)");
+  $res = db_query("DELETE FROM sq_flags WHERE entity_type='user' AND entity_id NOT IN (SELECT uid FROM users)");
+}

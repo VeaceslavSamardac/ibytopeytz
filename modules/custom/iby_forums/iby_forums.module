@@ -1,0 +1,1884 @@
+<?php /* -*- PHP -*-
+/**
+ * @file
+ * Place for actual hooks code for the Innovation By You Forums by Socialsquare
+ */
+
+/* In the following, we will do some nifty tricks, in order for us have full control of the forum forms and displays.
+ * This is needed in order for us to take control of the fields shown.
+ *
+ * For this setup we need mutliple forums types with different kind of needs.
+ * We will extend the forum taxonomy with ALL needed fields and then strip the fields we don't need per forum type.
+ */
+
+module_load_include('inc', 'iby_forums', 'includes/recent_activity');
+module_load_include('inc', 'iby_forums', 'includes/iby_forums.hack');
+module_load_include('inc', 'iby_forums', 'includes/challenges');
+module_load_include('inc', 'iby_forums', 'includes/chat--forums');
+module_load_include('inc', 'iby_forums', 'includes/tips--tricks');
+module_load_include('inc', 'iby_forums', 'includes/vip--rooms');
+module_load_include('inc', 'node', 'node.pages');
+module_load_include('inc', 'node', 'node.admin');
+module_load_include('inc', 'taxonomy', 'taxonomy.pages');
+module_load_include('inc', 'taxonomy', 'taxonomy.admin');
+module_load_include('inc', 'comment', 'comment.pages');
+module_load_include('inc', 'comment', 'comment.admin');
+module_load_include('inc', 'forum', 'forum.pages');
+module_load_include('inc', 'forum', 'forum.admin');
+
+// Unfortunately we need to include everything here, if we don't want to get in trouble with the caching
+// It was for a better overview I created these, but it would have been nice, not to have to include everything, everytime
+
+function iby_forums_form_important_notice_node_form_alter(&$form, &$form_state, $form_id) {
+  if(isset($_SERVER['HTTP_REFERER']) && preg_match("/forum\/(\d+)/is", $_SERVER['HTTP_REFERER'], $match)) {
+    if(isset($form['field_challenge_tid'])) {
+      $lang = $form['field_challenge_tid']['#language'];
+      $form['field_challenge_tid'][$lang][0]['value']['#default_value'] = $match[1];
+    }
+  }
+  unset($form['additional_settings']);
+  unset($form['revision_information']);
+  unset($form['options']);
+  unset($form['comment_settings']);
+  unset($form['path']);
+  unset($form['author']);
+  unset($form['menu']);
+
+  unset($form['actions']['preview']);
+}
+
+function iby_forums_tags_autocomplete($forum, $search_str='') {
+  $json_array = array();
+  $tags = iby_forums_get_filter_tags($forum->tid);
+  if(isset($tags->tags) && is_array($tags->tags) && count($tags->tags)) {
+    foreach($tags->tags as $tag) {
+      if(strpos($tag->name, $search_str) !== false) $json_array[$tag->name] = $tag->name;
+    }
+  }
+  drupal_json_output($json_array);
+}
+
+/**
+ * Form to search for a user
+ */
+function iby_forums_form_forum_tags_search_form_alter(&$form, &$form_state, $form_id) {
+  $form['forum_tid'] = array(
+    '#type' => 'hidden',
+    '#value' => arg(1),
+    '#default_value' => arg(1),
+  );
+
+  $form['search_tag'] = array(
+    '#type' => 'textfield',
+    '#title' => '',
+    '#autocomplete_path' => arg(0)."/".arg(1)."/tags_autocomplete",
+    '#size' => 40,
+    '#maxlength' => 60,
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Search'),
+  );
+  $form['#submit'][] = "iby_forums_tags_search_form_submit";
+}
+
+/**
+ * Implements hook_form_submit.
+ */
+function iby_forums_tags_search_form_submit($form, &$form_state) {
+
+  $forum_tid = $form['forum_tid']['#value'];
+
+  $url = "forum/".$forum_tid;
+
+  $tids = _iby_forums_get_tids_from_names(array($form['search_tag']['#value']), 1);
+  if($tids && is_array($tids) && count($tids)) {
+    $tid = array_shift($tids);
+    $url .= '/tags/'.$tid;
+  }
+
+  drupal_goto($url, array('fragment' => 'tags'));
+}
+
+function iby_forums_form_taxonomy_form_term_alter(&$form, &$form_state, $form_id) {
+  global $user;
+  unset($form['path']);
+
+  $parent_tid = false;
+  if(isset($form['#term']) && is_array($form['#term']))
+    $parent_tid = $form['#term']['parent'][0];
+
+  if(isset($form['relations']['parent']['#value']))
+    $parent_tid = $form['relations']['parent']['#value'][0];
+
+  if(isset($form['relations']['parent']['#default_value']))
+    $parent_tid = $form['relations']['parent']['#default_value'][0];
+
+  if(isset($_GET['parent']))
+    $parent_tid = $_GET['parent'];
+
+  $form['relations']['#attributes']['class'][] = "hide-me";
+
+  if($parent_tid) {
+    $form['relations']['parent']['#value'][$parent_tid] = intval($parent_tid);
+    $form['relations']['parent']['#default_value'][$parent_tid] = intval($parent_tid);
+
+    $forum_type = taxonomy_term_load($parent_tid);
+    $slug_name = StringTools::slug($forum_type->name);
+    //input values
+    $form['field_creator_uid']['und'][0]['value']['#type'] = "hidden";
+    $form['field_creator_uid']['und'][0]['value']['#default_value'] = $user->uid;
+
+    $roles = user_roles();
+    $form['field_allowed_roles']['und']['#options'] = $roles;
+
+    if(arg(0).arg(1).arg(2) == "forumaddforum") {
+      // Use predefined roles
+      $predefined_roles = array(2 => array(2, 3, 4, 5, 9, 8),
+                                5 => array(3, 8, 9),
+                                92 => array(2, 3, 4, 5, 9, 8)
+                                );
+      if(isset($predefined_roles[$parent_tid])) {
+        foreach($predefined_roles[$parent_tid] as $rid) {
+          $form['field_allowed_roles']['und'][$rid] = array('#return_value' => $rid, '#default_value' => $rid, '#checked' => true);
+        }
+      }
+
+      // This is now obsolete
+    //  if(!isset($form['field_allowed_roles']['und']['#default_value'])
+    //     || !is_array($form['field_allowed_roles']['und']['#default_value'])
+    //     || !count($form['field_allowed_roles']['und']['#default_value'])) {
+    //    foreach($user->roles as $rid=>$user_role) {
+    //      $form['field_allowed_roles']['und'][$rid] = array('#return_value' => $rid, '#default_value' => $rid, '#checked' => true);
+    //    }
+    //  }
+    }
+
+    switch($slug_name) {
+
+    case "challenges":
+      //unset($form['field_creator_uid']);
+      unset($form['field_tags']);
+      unset($form['field_vip_private']);
+      unset($form['field_vip_members']);
+      unset($form['field_vip_archived']);
+
+      $form['field_images']['#file_upload_title'] = t('Add images');
+      $form['name']['#title'] = t('Title');
+      $form['description']['#title'] = t('Description');
+      $form['description']['#description'] = t('max 2000 characters');
+
+      $form['description']['#maxlength'] = '2000';
+      $form['description']['#maxlength_js'] = true;
+
+      break;
+
+    case "chat_forums":
+      //unset($form['field_creator_uid']);
+      unset($form['field_enddate']);
+      unset($form['field_challenge_number']);
+      unset($form['field_tags']);
+      unset($form['field_vip_private']);
+      unset($form['field_vip_members']);
+      unset($form['field_vip_archived']);
+      $form['field_images']['#attributes']['class'][] = "hide-me";
+      $form['name']['#title'] = t('Title');
+      $form['description']['#title'] = t('Description');
+      break;
+
+    case "vip_rooms":
+      //unset($form['field_creator_uid']);
+      unset($form['field_tags']);
+      unset($form['field_enddate']);
+      unset($form['field_challenge_number']);
+      unset($form['field_vip_members']);
+      //unset($form['field_vip_archived']);
+      $form['field_images']['#attributes']['class'][] = "hide-me";
+      $form['name']['#title'] = t('Title');
+      $form['description']['#title'] = t('Description');
+      break;
+    }
+
+  }
+  //$form['actions']['submit']['#ajax'] = array('callback' => 'iby_forums_forum_node_form_submit',
+  //                                            'wrapper' => 'forum-node-form',
+  //                                            'name' => 'submit1',
+  //                                            );
+
+  $form['actions']['cancel'] = array('#type' => 'button', '#value' => 'Cancel', '#attributes' => array('onclick' => 'location.reload(); return false;'), '#weight' => 3);
+  $form['actions']['submit']['#weight'] = 1;
+  $form['actions']['preview']['#weight'] = 2;
+
+  $form['#submit'][] = 'iby_forums_taxonomy_form_term_submit';
+}
+
+function iby_forums_form_forum_node_form_alter(&$form, &$form_state, $form_id) {
+  global $user;
+
+  //$form['script']['#markup'] = '<script type="text/javascript">reinit_tinymce();</script>';
+
+  $language = $form['taxonomy_forums']['#language'];
+  $forum_id = $form['taxonomy_forums'][$language]['#default_value'];
+
+  if(is_array($forum_id)) {
+    if(count($forum_id) == 1) $forum_id = $forum_id[0];
+    else $forum_id = false;
+  }
+
+  if((arg(0) == "forum") && arg(1)) {
+    $forum_id = arg(1);
+    $form['taxonomy_forums'][$language]['#default_value'] = $forum_id;
+  }
+
+  if(!$forum_id && (arg(0) == "node") && (arg(2) == "edit")) {
+    $node_id = arg(1);
+    $node = node_load($node_id);
+
+    $forum_id = $node->taxonomy_forums[$langs[0]][0]['tid'];
+  }
+
+  $parent_tid = _iby_forums_get_parent_tid($forum_id);
+
+  $forum_type = taxonomy_term_load($parent_tid);
+  $slug_name = StringTools::slug($forum_type->name);
+  $slug_perm_name = StringTools::slug($forum_type->name, " ");
+
+  switch($slug_name) {
+  case "tips_tricks":
+    $form['#action'] = $form['#action']."#tips_tricks_form";
+    unset($form['field_sticky']);
+    $form['field_sticky']['und']['#title'] = "Featured";
+    unset($form['field_sticky_global']);
+    $form['field_files']['#attributes']['class'][] = "hide-me";
+    $form['field_tags']['und']['#required'] = true;
+
+    break;
+  case "chat_forums":
+    if(!sqtools_is_admin($user) && !_iby_forums_check_access(false, false, "forum", "edit", false, $forum_id)) {
+      unset($form['field_sticky']);
+      unset($form['field_sticky_global']);
+    }
+    break;
+  default:
+    unset($form['field_sticky']);
+    unset($form['field_sticky_global']);
+    unset($form['field_type']);
+    break;
+  }
+
+  $form['title']['#title'] = "Heading";
+  $form['body']['und'][0]['#title'] = "Body copy (first 600 characters are shown in grid preview)";
+
+  if(!sqtools_is_admin($user) && !_iby_forums_check_access(false, false, "forum", "edit", false, $forum_id)) {
+    $form['taxonomy_forums']['#attributes']['class'][] = "hide-me";
+  }
+
+  $tax_lang = $form['taxonomy_forums']['#language'];
+  $tax_options = $form['taxonomy_forums'][$tax_lang]['#options'];
+
+  $query = db_select('taxonomy_term_hierarchy', 'th');
+  $query->fields('th', array('tid'));
+  $query->condition('th.parent', $forum_type->tid);
+
+  $tids = array();
+  $res = $query->execute();
+  if($res) {
+    foreach($res as $row) {
+      $tids[] = $row->tid;
+    }
+  }
+  $tids[] = $forum_type->tid;
+
+  unset($form['additional_settings']);
+  unset($form['revision_information']);
+  unset($form['options']);
+  unset($form['comment_settings']);
+  unset($form['path']);
+  unset($form['author']);
+  unset($form['menu']);
+
+  //$form['#action'] = '/node/add/forum/'.$forum_id.'?inline=1';
+  //unset($form['actions']['preview']);
+  $form['actions']['submit']['#ajax'] = array('callback' => 'iby_forums_forum_node_form_submit',
+                                              'wrapper' => 'forum-node-form',
+                                              'name' => 'submit1',
+                                              );
+  $form['actions']['cancel'] = array('#type' => 'button', '#value' => 'Cancel', '#attributes' => array('onclick' => 'location.reload(); return false;'), '#weight' => 3);
+  $form['actions']['submit']['#weight'] = 1;
+  $form['actions']['submit']['#value'] = "Submit";
+  $form['actions']['preview']['#weight'] = 2;
+  if(arg(2) == "edit") {
+    unset($form['actions']['preview']['#attributes']['onclick']);
+  }
+  else {
+    $form['actions']['preview']['#attributes']['onclick'] = "jQuery('.node-form').each(function(){ this.setAttribute('action', '/node/add/forum/".$forum_id."?inline=1'); });";
+  }
+}
+
+// comment_form__node_forum
+function iby_forums_form_comment_node_forum_form_alter(&$form, &$form_state, $form_id) {
+
+  if(arg(0) == "node") {
+    $node_id = arg(1);
+  } elseif((arg(0) == "comment") && (arg(1) == "reply")) {
+    $node_id = arg(2);
+  }
+
+  $node = node_load($node_id);
+
+  $langs = array_keys($node->taxonomy_forums);
+  $forum_id = $node->taxonomy_forums[$langs[0]][0]['tid'];
+
+  $parent_tid = _iby_forums_get_parent_tid($forum_id);
+
+  $forum_type = taxonomy_term_load($parent_tid);
+  $slug_name = StringTools::slug($forum_type->name);
+  $slug_perm_name = StringTools::slug($forum_type->name, " ");
+
+  switch($slug_name) {
+  case "tips_tricks":
+    $form['field_files']['#attributes']['class'][] = "hide-me";
+    break;
+  case "challenges":
+  case "chat_forums":
+  case "vip_rooms":
+  }
+
+  if(arg(2) == "edit") {
+    $lang = $form['comment_body']['#language'];
+    $form['comment_body'][$lang][0]['#rows'] = 25;
+  }
+
+  $form['#action'] = str_replace("?show_ajax=1", "", $form['#action']);
+
+  $form['subject']['#title'] = "Heading";
+
+  //unset($form['actions']['preview']);
+
+  $form['author']['#type'] = "hidden";
+  //unset($form['author']);
+  $form['actions']['submit']['#ajax'] = array('callback' => 'iby_forums_form_comment_node_forum_form_submit',
+                                              'wrapper' => 'comment-form',
+                                              'name' => 'submit1',
+                                              );
+
+  $form['actions']['cancel'] = array('#type' => 'button', '#value' => 'Cancel', '#attributes' => array('onclick' => 'location.reload(); return false;'), '#weight' => 3);
+  $form['actions']['submit']['#weight'] = 1;
+  $form['actions']['preview']['#weight'] = 2;
+  //$form['actions']['preview']['#attributes']['onclick'] = "jQuery('.node-form').each(function(){ this.setAttribute('action', '/node/add/forum/".$forum_id."?inline=1'); });";
+  $form['actions']['submit']['#value'] = "Submit";
+}
+
+function iby_forums_forum_node_form_submit($form, &$form_state) {
+  if(isset($form_state['node']->nid) && $form_state['node']->nid) {
+    if(isset($form_state['confirm_delete']) && $form_state['confirm_delete']) {
+      return $form;
+    } else {
+      $commands = array();
+      $commands[] = ajax_command_invoke(NULL, 'goto_node', array($form_state['node']->nid));
+      $page = array('#type' => 'ajax', '#commands' => $commands);
+      ajax_deliver($page);
+    }
+
+  } else return $form;
+}
+
+function iby_forums_taxonomy_form_term_submit($form, &$form_state) {
+  if(isset($form_state['term']->tid) && $form_state['term']->tid) {
+    if(!isset($form_state['confirm_delete']) || !$form_state['confirm_delete']) {
+      $form_state['redirect'] = "forum/".$form_state['term']->tid;
+    }
+  }
+  return $form;
+}
+
+function iby_forums_form_comment_node_forum_form_submit($form, &$form_state) {
+  $form['script']['#markup'] = '<script type="text/javascript">reinit_tinymce();</script>';
+
+  if(isset($form_state['comment']->cid) && $form_state['comment']->cid) {
+    $commands = array();
+
+    $page = comment_get_display_page($form_state['comment']->cid, 'forum');
+
+    $commands[] = ajax_command_invoke(NULL, 'goto_node', array($form_state['comment']->nid, $page));
+    $page = array('#type' => 'ajax', '#commands' => $commands);
+    ajax_deliver($page);
+  } else return $form;
+}
+
+/**
+ * Menu callback; prints all members for a forum (not containers).
+ */
+function iby_forum_members($forum = NULL) {
+  // This is supposed to be a VIP Room - so a container is definetily not wanted
+  if(!empty($forum->container)) { return drupal_not_found(); }
+
+  $taxonomy = taxonomy_term_load($forum->tid);
+
+  $uids = array();
+  foreach($taxonomy->field_vip_members['und'] as $vip_member) {
+    $uids[] = $vip_member['value'];
+  }
+
+  $members = user_load_multiple($uids);
+
+  array_shift($forum->parents);
+
+  $parents_count = count($forum->parents);
+  $parents_count--;
+  $parent = $forum->parents[$parents_count];
+
+  $variables = array('members' => $members, 'forum' => $forum, 'parent' => $parent, 'parents' => $forum->parents);
+
+  return theme('ibyforum__members', $variables);
+}
+
+function iby_forums_remove_member($forum, $member_uid) {
+  $taxonomy = taxonomy_term_load($forum->tid);
+
+  foreach($taxonomy->field_vip_members['und'] as $index=>$vip_member) {
+    if($vip_member['value'] == $member_uid) {
+
+      unset($taxonomy->field_vip_members['und'][$index]);
+
+      $res = db_delete('iby_forum_vip_members')
+        ->condition('uid', $member_uid)
+        ->condition('tid', $forum->tid)
+        ->execute();
+
+      taxonomy_term_save($taxonomy);
+      break;
+    }
+  }
+
+  $commands = array();
+  $commands[] = ajax_command_remove('#user-preview-box'.$member_uid);
+  $page = array('#type' => 'ajax', '#commands' => $commands);
+  ajax_deliver($page);
+}
+
+
+/**
+ * Form to search for a user
+ */
+function iby_forums_form_forum_members_form_alter(&$form, &$form_state, $form_id) {
+  $form['forum_tid'] = array(
+    '#type' => 'hidden',
+    '#default_value' => arg(1),
+  );
+  $form['user_add'] = array(
+    '#type' => 'textfield',
+    '#title' => '',
+    '#autocomplete_path' => 'user/autocomplete',
+    '#size' => 40,
+    '#maxlength' => 60,
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Add'),
+  );
+  $form['#submit'][] = "iby_forums_members_form_submit";
+}
+
+/**
+ * Implements hook_form_submit.
+ */
+function iby_forums_members_form_submit($form, &$form_state) {
+  if(isset($form_state['values']) && isset($form_state['values']['forum_tid']) && isset($form_state['values']['user_add'])) {
+
+    $taxonomy = taxonomy_term_load($form_state['values']['forum_tid']);
+
+    $account = user_load_by_name($form_state['values']['user_add']);
+
+    $do_insert = true;
+    foreach($taxonomy->field_vip_members['und'] as $vip_member) {
+      if($vip_member['value'] == $account->uid) {
+        $do_insert = false;
+        break;
+      }
+    }
+
+    if($do_insert) {
+      $taxonomy->field_vip_members['und'][] = array('value' => $account->uid);
+      $keys = array('tid' => $form_state['values']['forum_tid'], 'uid' => $account->uid, 'timestamp' => time());
+      $query = db_insert('iby_forum_vip_members');
+      $query->fields($keys)->execute();
+    }
+    return taxonomy_term_save($taxonomy);
+
+  }
+  return false;
+}
+
+function iby_forum_files($forum = NULL) {
+  // This is supposed to be a VIP Room - so a container is definetily not wanted
+  if(!empty($forum->container)) { return drupal_not_found(); }
+
+  // Get this forum's topics
+  $query = db_select('forum_index', 'f');
+  $query->fields('f', array('nid'));
+  $query->condition('f.tid', $forum->tid);
+
+  $result = $query->execute();
+  $nids = array();
+  foreach ($result as $record) {
+    $nids[] = $record->nid;
+  }
+
+  // Get comments for the topics of this forum's topics
+  $query = db_select('comment', 'c');
+  $query->fields('c', array('cid'));
+  $query->condition('c.nid', $nids, "IN");
+
+  $result = $query->execute();
+  $cids = array();
+  foreach ($result as $record) {
+    $cids[] = $record->cid;
+  }
+
+  $files = array();
+
+  // Get files
+  $sql = "SELECT fdff.field_files_fid, fm.uid, fm.filename, fm.uri, fm.filemime, fm.filesize, fm.status, fm.timestamp, u.name, ";
+  $sql .= '  (SUBSTRING(fm.filename, -( LOCATE(\'.\', REVERSE(fm.filename)) ))) AS filetype ';
+  $sql .= "FROM field_data_field_files AS fdff ";
+  $sql .= " JOIN file_managed AS fm ON fm.fid = fdff.field_files_fid ";
+  $sql .= " JOIN users AS u ON u.uid = fm.uid ";
+  $sql .= "WHERE fdff.deleted = 0";
+  $sql .= " AND ( ";
+  $sql .= "       (fdff.entity_type = 'comment' AND fdff.bundle = 'comment_node_forum' AND fdff.entity_id IN ('".implode("','", $cids)."'))";
+  $sql .= "      OR";
+  $sql .= "       (fdff.entity_type = 'node' AND fdff.bundle = 'forum' AND fdff.entity_id IN ('".implode("','", $nids)."'))";
+  $sql .= "     ) ";
+
+  $orderby_names = array('filename' => "fm.filename", 'filetype' => "filetype", 'filesize' => "fm.filesize", 'name' => "u.name", 'timestamp' => "fm.timestamp");
+  $direction = ((isset($_GET['d']) && (strtolower($_GET['d']) == "desc")) ? "DESC" : "ASC");
+  $orderby = "fm.filename";
+  if(isset($_GET['o']) && isset($orderby_names[$_GET['o']])) $orderby = $orderby_names[$_GET['o']];
+
+  $sql .= " ORDER BY ".$orderby." ".$direction;
+
+  $result = db_query($sql);
+
+  foreach($result as $record) $files[] = $record;
+
+  array_shift($forum->parents);
+
+  $parents_count = count($forum->parents);
+  $parents_count--;
+  $parent = $forum->parents[$parents_count];
+
+  $variables = array('files' => $files, 'forum' => $forum, 'parent' => $parent, 'parents' => $forum->parents);
+
+  return theme('ibyforum__files', $variables);
+}
+
+
+/**
+ * Menu callback; prints a forum listing.
+ */
+function iby_forum_page($forum = NULL) {
+  if(!isset($forum)) { /* default is to show all forums - we show none... */ }
+
+  $theme_name = "ibyforums";
+  $variables = array('forums' => $forum->forums, 'topics' => '', 'parents' => $forum->parents, 'tid' => $forum->tid, 'forums_per_page' => 10);
+
+  if(empty($forum->container)) {
+    $variables['topics'] = iby_forums_get_topics($forum->tid, 1, 25);
+    $parents_count = count($forum->parents);
+    $parents_count--;
+    $parent = $forum->parents[$parents_count];
+
+    $call_name = StringTools::slug($parent->name, "__");
+    $real_name = StringTools::slug($parent->name, "--");
+
+  } else {
+    $call_name = StringTools::slug($forum->name, "__");
+    $real_name = StringTools::slug($forum->name, "--");
+  }
+
+  if($call_name) {
+    $theme_name = $call_name.'__forums';
+  }
+
+  return theme($theme_name, $variables);
+}
+
+function iby_forums_cron() {
+  _iby_forums_sq_tags_cache_populate();
+}
+
+function iby_forums_init() {
+  iby_forums_sq_flags_cache_init();
+
+  $query_cache = &drupal_static('iby_forum_tagging', array());
+  if(isset($_GET['q']) && strpos($_GET['q'], 'tags')) {
+    $q_parts = explode("tags/", $_GET['q']);
+    if(count($q_parts) > 1) {
+      $query_cache['tags_tids'] = explode("/", $q_parts[1]);
+    }
+  }
+
+  $container = false;
+  $forum_tid = 0;
+  if(arg(0) == "forum") {
+    $forum_tid = arg(1);
+
+    if($forum_tid && in_array($forum_tid, variable_get('forum_containers', array()))) $container = true;
+
+  } elseif(arg(0) == "node") {
+    $forum_tid = db_select('forum_index', 'fi')->fields('fi', array('tid'))->condition('nid', arg(1))->execute()->fetchField();
+  }
+
+  $include_tids = array();
+  if($forum_tid) {
+    $forum_type = taxonomy_term_load($forum_tid);
+    $slug_name = StringTools::slug($forum_type->name);
+
+    $include_tids = array($forum_tid);
+    if($container) {
+      $res = db_select('taxonomy_term_hierarchy', 'h')->fields('h', array('tid'))->condition('parent', $forum_tid)->execute();
+      if($res) {
+        foreach($res as $row) $include_tids[] = $row->tid;
+      }
+    }
+  }
+
+  if(isset($_GET['o']) && $_GET['o']) $query_cache['o'] = $_GET['o'];
+  if(isset($_GET['d']) && $_GET['d']) $query_cache['d'] = ((strtolower($_GET['d']) == 'desc') ? "DESC" : "ASC");
+  else $query_cache['d'] = "ASC";
+  if(isset($_GET['p']) && $_GET['p']) $query_cache['p'] = intval($_GET['p']);
+
+  $tag_tids = array();
+
+  // If more caching is needed - it could be implemented by adding a hook for each time a tag is inserted, that inserts a row in database table with:
+  // tag_id, forum_id, node_id, comment_id <- node_id and/or comment_id = 0 when the tag is added to a higher level
+  // Then all information can be gathered a lot faster in with fewer (1?) queries
+
+  // Here we check to see, if we have actually gotten any tags
+  if(isset($query_cache['tags_tids']) && count($query_cache['tags_tids'])) {
+
+    $in_tags_tids = $query_cache['tags_tids'];
+
+    $extra_tags_tids = array();
+    $_query = db_select('field_data_field_tags', 'tags');
+    $_query->fields('tags', array('entity_id', 'field_tags_tid'));
+    $_query->condition('tags.entity_type', 'taxonomy_term');
+    $_query->condition('tags.bundle', 'tags');
+    $_query->condition('tags.entity_id', $query_cache['tags_tids'], 'IN');
+    $_query->groupBy('tags.field_tags_tid');
+    $res = $_query->execute();
+    if($res) {
+      foreach($res as $row) {
+        $in_tags_tids[] = $row->field_tags_tid;
+      }
+    }
+
+    // Make the cache ready - this also indicates that tags was set
+    $query_cache['tids'] = array(); // Forums
+    $query_cache['nids'] = array(); // Topics
+    $query_cache['cids'] = array(); // Comments
+
+    $_query = db_select('iby_forum_tags_cache', 'tags');
+    $_query->fields('tags', array('tid'));
+    $_query->addExpression('COUNT(DISTINCT field_tags_tid)', 'distinct_tags');
+    //$_query->condition('tags.field_tags_tid', $query_cache['tags_tids'], 'IN');
+    $_query->condition('tags.field_tags_tid', $in_tags_tids, 'IN');
+    if(isset($include_tids) && count($include_tids)) $_query->condition('tags.tid', $include_tids, 'IN');
+    $_query->groupBy('tid');
+    $res = $_query->execute();
+    if($res) {
+      foreach($res as $row) {
+        if($row->distinct_tags >= count($query_cache['tags_tids'])) {
+          $query_cache['tids'][] = $row->tid;
+        }
+      }
+    }
+
+    $_query = db_select('iby_forum_tags_cache', 'tags');
+    $_query->fields('tags', array('nid'));
+    $_query->addExpression('COUNT(DISTINCT field_tags_tid)', 'distinct_tags');
+    //$_query->condition('tags.field_tags_tid', $query_cache['tags_tids'], 'IN');
+    $_query->condition('tags.field_tags_tid', $in_tags_tids, 'IN');
+    if(isset($include_tids) && count($include_tids)) $_query->condition('tags.tid', $include_tids, 'IN');
+    $_query->groupBy('nid');
+    $res = $_query->execute();
+    if($res) {
+      foreach($res as $row) {
+        if($row->distinct_tags >= count($query_cache['tags_tids'])) {
+          $query_cache['nids'][] = $row->nid;
+        }
+      }
+    }
+
+    $_query = db_select('iby_forum_tags_cache', 'tags');
+    $_query->fields('tags', array('cid'));
+    $_query->addExpression('COUNT(DISTINCT field_tags_tid)', 'distinct_tags');
+    //$_query->condition('tags.field_tags_tid', $query_cache['tags_tids'], 'IN');
+    $_query->condition('tags.field_tags_tid', $in_tags_tids, 'IN');
+    if(isset($include_tids) && count($include_tids)) $_query->condition('tags.tid', $include_tids, 'IN');
+    $_query->groupBy('cid');
+    $res = $_query->execute();
+    if($res) {
+      foreach($res as $row) {
+        if($row->distinct_tags >= count($query_cache['tags_tids'])) {
+          $query_cache['cids'][] = $row->cid;
+        }
+      }
+    }
+  }
+
+  // REMEMBER TO EXCLUDE CHALLENGES, THAT ARE ACTIVE, AS THESE AREN'T FILTERED! OTHERWISE WE GET TAGS THAT ARE NOT IN THE FILTERED ITEMS...
+  // Do something like get all active tid, select tid, nid and cids from cache and remove them from query_cache array
+
+  // Now we have all individual entities that is tagged with the selected tags
+  // Next step is to get the all parenting entities "looking up"
+  // i.e. node ids for comments, taxonomy ids for nodes and ?taxonomy (container) ids for taxonomies?
+}
+
+/* currently a direct copy of forum_get_topics() */
+function iby_forums_get_topics($tid, $sortby, $forum_per_page) {
+  global $user, $forum_topic_list_header;
+
+  $forum_topic_list_header = array(
+    NULL,
+    array('data' => t('Topic'), 'field' => 'f.title'),
+    array('data' => t('Replies'), 'field' => 'f.comment_count'),
+    array('data' => t('Last reply'), 'field' => 'f.last_comment_timestamp'),
+  );
+
+  $order = _forum_get_topic_order($sortby);
+  for ($i = 0; $i < count($forum_topic_list_header); $i++) {
+    if ($forum_topic_list_header[$i]['field'] == $order['field']) {
+      $forum_topic_list_header[$i]['sort'] = $order['sort'];
+    }
+  }
+
+  $query = db_select('forum_index', 'f')->extend('PagerDefault')->extend('TableSort');
+  $query->fields('f');
+  $query
+    ->condition('f.tid', $tid)
+    ->addTag('node_access')
+    ->orderBy('f.sticky', 'DESC')
+    ->orderByHeader($forum_topic_list_header)
+    ->limit($forum_per_page);
+
+  $count_query = db_select('forum_index', 'f');
+  $count_query->condition('f.tid', $tid);
+  $count_query->addExpression('COUNT(*)');
+  $count_query->addTag('node_access');
+
+  $query->setCountQuery($count_query);
+  $result = $query->execute();
+  $nids = array();
+  foreach ($result as $record) {
+    $nids[] = $record->nid;
+  }
+  if ($nids) {
+    $query = db_select('node', 'n')->extend('TableSort');
+    $query->fields('n', array('title', 'nid', 'type', 'sticky', 'created', 'uid'));
+    $query->addField('n', 'comment', 'comment_mode');
+
+    $query->join('node_comment_statistics', 'ncs', 'n.nid = ncs.nid');
+    $query->fields('ncs', array('cid', 'last_comment_uid', 'last_comment_timestamp', 'comment_count'));
+
+    $query->join('forum_index', 'f', 'f.nid = ncs.nid');
+    $query->addField('f', 'tid', 'forum_tid');
+
+    $query->join('users', 'u', 'n.uid = u.uid');
+    $query->addField('u', 'name');
+
+    $query->join('users', 'u2', 'ncs.last_comment_uid = u2.uid');
+
+    $query->addExpression('CASE ncs.last_comment_uid WHEN 0 THEN ncs.last_comment_name ELSE u2.name END', 'last_comment_name');
+
+    $query
+      ->orderBy('f.sticky', 'DESC')
+      ->orderByHeader($forum_topic_list_header)
+      ->condition('n.nid', $nids);
+
+    $result = $query->execute();
+  }
+  else {
+    $result = array();
+  }
+
+  $topics = array();
+  $first_new_found = FALSE;
+  foreach ($result as $topic) {
+    if ($user->uid) {
+      // folder is new if topic is new or there are new comments since last visit
+      if ($topic->forum_tid != $tid) {
+        $topic->new = 0;
+      }
+      else {
+        $history = _forum_user_last_visit($topic->nid);
+        $topic->new_replies = comment_num_new($topic->nid, $history);
+        $topic->new = $topic->new_replies || ($topic->last_comment_timestamp > $history);
+      }
+    }
+    else {
+      // Do not track "new replies" status for topics if the user is anonymous.
+      $topic->new_replies = 0;
+      $topic->new = 0;
+    }
+
+    // Make sure only one topic is indicated as the first new topic.
+    $topic->first_new = FALSE;
+    if ($topic->new != 0 && !$first_new_found) {
+      $topic->first_new = TRUE;
+      $first_new_found = TRUE;
+    }
+
+    if ($topic->comment_count > 0) {
+      $last_reply = new stdClass();
+      $last_reply->created = $topic->last_comment_timestamp;
+      $last_reply->name = $topic->last_comment_name;
+      $last_reply->uid = $topic->last_comment_uid;
+      $topic->last_reply = $last_reply;
+    }
+    $topics[] = $topic;
+  }
+
+  return $topics;
+}
+
+
+// Copied from forum_forum_load
+function iby_forum_forum_load($tid = NULL) {
+  $cache = &drupal_static(__FUNCTION__, array());
+
+  // Return a cached forum tree if available.
+  if(!isset($tid)) {
+    $tid = 0;
+  }
+
+  $vid = variable_get('forum_nav_vocabulary', 0);
+
+  // Load and validate the parent term.
+  if ($tid) {
+    $forum_term = taxonomy_term_load($tid);
+    if(!$forum_term || ($forum_term->vid != $vid)) {
+      return $cache[$tid] = FALSE;
+    }
+  }
+  // If $tid is 0, create an empty object to hold the child terms.
+  elseif ($tid === 0) {
+    $forum_term = (object) array(
+      'tid' => 0,
+    );
+  }
+
+  // Determine if the requested term is a container.
+  if (!$forum_term->tid || in_array($forum_term->tid, variable_get('forum_containers', array()))) {
+    $forum_term->container = 1;
+  }
+
+  // Load parent terms.
+  $forum_term->parents = taxonomy_get_parents_all($forum_term->tid);
+
+  // Load the tree below.
+  $forums = array();
+  $_forums = taxonomy_get_tree($vid, $tid);
+
+  if (count($_forums)) {
+    $query = db_select('node', 'n');
+    $query->join('node_comment_statistics', 'ncs', 'n.nid = ncs.nid');
+    $query->join('forum', 'f', 'n.vid = f.vid');
+    $query->addExpression('COUNT(n.nid)', 'topic_count');
+    $query->addExpression('SUM(ncs.comment_count)', 'comment_count');
+    $counts = $query
+      ->fields('f', array('tid'))
+      ->condition('status', 1)
+      ->groupBy('tid')
+      ->addTag('node_access')
+      ->execute()
+      ->fetchAllAssoc('tid');
+  }
+
+  foreach ($_forums as $forum) {
+    // Determine if the child term is a container.
+    if (in_array($forum->tid, variable_get('forum_containers', array()))) {
+      $forum->container = 1;
+    }
+
+    // Merge in the topic and post counters.
+    if (!empty($counts[$forum->tid])) {
+      $forum->num_topics = $counts[$forum->tid]->topic_count;
+      $forum->num_posts = $counts[$forum->tid]->topic_count + $counts[$forum->tid]->comment_count;
+    }
+    else {
+      $forum->num_topics = 0;
+      $forum->num_posts = 0;
+    }
+
+    $forums[$forum->tid] = $forum;
+  }
+
+  // Cache the result, and return the tree.
+  $forum_term->forums = $forums;
+
+  return $forum_term;
+}
+
+
+function iby_forums_get_filter_tags($forum_tid) {
+  return iby_forums_get_forums_filter_tags($forum_tid);
+}
+
+function iby_forums_get_forums_filter_tags($forum_tid) {
+  global $user;
+
+  // We should probably add some permissions checking here as well
+  $query_cache = &drupal_static('iby_forum_tagging', array());
+
+  $tids = array(); // Forums
+  $tags_tids = array(); // Final tags tids
+  $tags = new stdClass;
+  $tags->info = array('min-count'=>99999, 'max-count'=>0); // Final tags
+  $tags->tags = array(); // Final tags
+
+  if($forum_tid) {
+
+    $tids_query = db_select('taxonomy_term_hierarchy', 'th')->fields('th', array('tid'))->condition('th.parent', $forum_tid);
+
+    // We want to filter out active challenges - or rather: include ended challenges
+    $challenge_tid = _iby_forums_get_tid_from_name("Challenges", 2);
+    if($challenge_tid == $forum_tid)
+      $tids_query->join('field_data_field_enddate', 'fe', "fe.entity_type='taxonomy_term' AND fe.bundle='forums' AND fe.entity_id=th.tid AND fe.field_enddate_value < NOW()");
+
+    if(!sqtools_is_admin($user)) {
+      $query_access = db_select('field_data_field_allowed_roles', 'far');
+      $query_access->addField('far', 'entity_id', 'tid');
+      $query_access->condition('far.field_allowed_roles_value', array_keys($user->roles), 'IN');
+      $query_access->condition('far.entity_type', 'taxonomy_term');
+      $query_access->condition('far.bundle', 'forums');
+      $query_access->condition('far.entity_id', $tids_query, 'IN');
+      $query_access->distinct();
+
+      $results = $query_access->execute();
+
+    } else {
+      $results = $tids_query->execute();
+    }
+
+    foreach($results as $result) {
+      if(!in_array($result->tid, $tids)) $tids[] = $result->tid;
+    }
+
+  } elseif(isset($query_cache['tags_tids'])) {
+    $tids = $query_cache['tids'];
+
+  }
+
+  if(!$tids && $forum_tid) $tids = array($forum_tid);
+  if($tids) {
+
+    $query = db_select('iby_forum_tags_cache', 'tags');
+    $query->fields('tags');//, array('field_tags_tid'));
+    $query->condition('tags.tid', $tids, 'IN');
+
+    if(isset($query_cache['tags_tids']) && is_array($query_cache['tags_tids']) && count($query_cache['tags_tids'])) {
+      $i = 1;
+      foreach($query_cache['tags_tids'] as $tags_tid) {
+        $query->join('iby_forum_tags_cache', 'tc'.$i, 'tc'.$i.'.tid = tags.tid AND tc'.$i.'.field_tags_tid='.$tags_tid);
+        $i++;
+      }
+    }
+
+    $res = $query->execute();
+
+    if($res) {
+      foreach($res as $row) {
+       if(!isset($tags_tids[$row->field_tags_tid])) $tags_tids[$row->field_tags_tid] = 0;
+        $tags_tids[$row->field_tags_tid]++;
+        if($row->tid && (!is_array($query_cache['tids']) || !in_array($row->tid, $query_cache['tids']))) $query_cache['tids'][] = $row->tid;
+        if($row->nid && (!is_array($query_cache['nids']) || !in_array($row->nid, $query_cache['nids']))) $query_cache['nids'][] = $row->nid;
+      }
+    }
+  }
+
+  //arsort($tags_tids, SORT_NUMERIC);
+
+  // Finally - get the tags and return them
+  $tags_info = array();
+  if($tags_tids) {
+    $query = db_select('taxonomy_term_data', 'ttd');
+    $query->fields('ttd');
+    //$query->condition(db_or()
+    //                  ->condition('ttd.tid', array_keys($tags_tids), "IN")
+    //                  ->condition('ttd.tid', array_keys($tags_tids), "IN"));
+    $query->condition('ttd.tid', array_keys($tags_tids), "IN");
+    $query->orderBy('name', 'ASC');
+    $results = $query->execute();
+    foreach($results as $result) {
+      if(isset($tags_tids[$result->tid])) $result->count = $tags_tids[$result->tid];
+
+      if($result->count < $tags->info['min-count']) $tags->info['min-count'] = $result->count;
+      if($result->count > $tags->info['max-count']) $tags->info['max-count'] = $result->count;
+
+      $tags_info[] = $result;
+    }
+
+    $tags->tags = $tags_info;
+
+    $tags->info['diff'] = ($tags->info['max-count'] - $tags->info['min-count']);
+  }
+
+  return $tags;
+}
+
+
+function iby_forums_get_nodes_filter_tags($forum_tid) {
+  global $user;
+
+  // We should probably add some permissions checking here as well
+  $query_cache = &drupal_static('iby_forum_tagging', array());
+
+  $tids = array(); // Forums
+  $tags_tids = array(); // Final tags tids
+  $tags->info = array('min-count'=>99999, 'max-count'=>0); // Final tags
+  $tags->tags = array(); // Final tags
+
+  if($forum_tid) {
+
+    $query = db_select('iby_forum_tags_cache', 'tags');
+    $query->fields('tags');//, array('field_tags_tid'));
+
+    $forum = taxonomy_term_load($forum_tid);
+    if($forum->container) {
+      $in_query = db_select('taxonomy_term_hierarchy', 'th');
+      $in_query->fields('th', array('tid'));
+      $in_query->condition('th.parent', $forum_tid);
+
+      $query->condition('tags.tid', $in_query, 'IN');
+
+    } else {
+      $query->condition('tags.tid', $forum_tid);
+    }
+
+
+    // We only want to show nodes with comments - that is: show problems with a solution
+    $tips_tricks_tid = _iby_forums_get_tid_from_name("Tips & Tricks", 2);
+    if($tips_tricks_tid == $forum_tid)
+      $query->join('comment', 'c', "c.nid=tags.nid");
+
+    if(isset($query_cache['tags_tids']) && is_array($query_cache['tags_tids']) && count($query_cache['tags_tids'])) {
+
+      $_tags_tids = $query_cache['tags_tids'];
+
+      //$_query = db_select('field_data_field_tags', 'tags');
+      //$_query->fields('tags', array('entity_id', 'field_tags_tid'));
+      //$_query->condition('tags.entity_type', 'taxonomy_term');
+      //$_query->condition('tags.bundle', 'tags');
+      //$_query->condition('tags.entity_id', $query_cache['tags_tids'], 'IN');
+      //$_query->groupBy('tags.field_tags_tid');
+      //$res = $_query->execute();
+      //if($res) {
+      //  foreach($res as $row) {
+      //    $_tags_tids[] = $row->field_tags_tid;
+      //  }
+      //}
+
+
+      $i = 1;
+      foreach($_tags_tids as $tags_tid) {
+        $query->join('iby_forum_tags_cache', 'tc'.$i, 'tc'.$i.'.nid = tags.nid AND tc'.$i.'.field_tags_tid='.$tags_tid);
+        $i++;
+      }
+    }
+
+    $res = $query->execute();
+
+    if($res) {
+      foreach($res as $row) {
+        if(!isset($tags_tids[$row->field_tags_tid])) $tags_tids[$row->field_tags_tid] = 0;
+        $tags_tids[$row->field_tags_tid]++;
+        if($row->nid && !in_array($query_cache['nids'])) $query_cache['nids'][] = $row->nid;
+      }
+    }
+  }
+
+  //arsort($tags_tids, SORT_NUMERIC);
+
+  // Finally - get the tags and return them
+  $tags_info = array();
+  if($tags_tids) {
+    $query = db_select('taxonomy_term_data', 'ttd');
+    $query->fields('ttd');
+    $query->condition('ttd.tid', array_keys($tags_tids), "IN");
+    $query->orderBy('name', 'ASC');
+    $results = $query->execute();
+    foreach($results as $result) {
+      if(isset($tags_tids[$result->tid])) $result->count = $tags_tids[$result->tid];
+
+      if($result->count < $tags->info['min-count']) $tags->info['min-count'] = $result->count;
+      if($result->count > $tags->info['max-count']) $tags->info['max-count'] = $result->count;
+
+      $tags_info[] = $result;
+    }
+
+    $tags->tags = $tags_info;
+
+    $tags->info['diff'] = ($tags->info['max-count'] - $tags->info['min-count']);
+  }
+
+  return $tags;
+}
+
+function iby_forums_get_comments_filter_tags($forum_topic_nid) {
+  $query_cache = &drupal_static('iby_forum_tagging', array());
+
+  $cids = array(); // Comments
+  $tags_tids = array(); // Final tags tids
+  $tags->info = array('min-count'=>99999, 'max-count'=>0); // Final tags
+  $tags->tags = array(); // Final tags
+
+  if(isset($query_cache['cids'])) {
+    $cids = $query_cache['cids'];
+
+  } else {
+    // Get the forum node comment cids
+    $query = db_select('comment', 'ibyc');
+    $query->fields('ibyc', array('cid'));
+    $query->condition('ibyc.nid', $forum_topic_nid);
+    $results = $query->execute();
+    foreach($results as $result) {
+      if(!in_array($result->cid, $cids)) $cids[] = $result->cid;
+    }
+  }
+
+  // Now we get all the available tags
+  $query = db_select('field_data_field_tags', 'fdft');
+  $query->fields('fdft', array('field_tags_tid'));
+
+  if(count($cids)) {
+    $query
+      ->condition('fdft.entity_type', 'comment')
+      ->condition('fdft.bundle', 'comment_node_forum')
+      ->condition('fdft.entity_id', $cids, 'IN');
+
+    $results = $query->execute();
+    foreach($results as $result) {
+      if(!isset($tags_tids[$result->field_tags_tid])) $tags_tids[$result->field_tags_tid] = 0;
+      $tags_tids[$result->field_tags_tid]++;
+    }
+
+    // Finally - get the tags and return them
+    if($tags_tids) {
+      $query = db_select('taxonomy_term_data', 'ttd');
+      $query->fields('ttd');
+      $query->condition('ttd.tid', array_keys($tags_tids), "IN");
+      $query->orderBy('name', 'ASC');
+      $results = $query->execute();
+      foreach($results as $result) {
+        if(isset($tags_tids[$result->tid])) $result->count = $tags_tids[$result->tid];
+
+        if($result->count < $tags->info['min-count']) $tags->info['min-count'] = $result->count;
+        if($result->count > $tags->info['max-count']) $tags->info['max-count'] = $result->count;
+
+        $tags->tags[] = $result;
+      }
+
+      $tags->info['diff'] = ($tags->info['max-count'] - $tags->info['min-count']);
+    }
+
+    return $tags;
+  }
+}
+
+
+// Is this really needed?
+function iby_forums_node_access($op, $node, $account) {
+  if(sqtools_is_admin()) return NODE_ACCESS_ALLOW;
+  if(_iby_forums_check_access()) return NODE_ACCESS_ALLOW;
+  else return NODE_ACCESS_DENY; // Not a member = no access!
+  return NODE_ACCESS_IGNORE;
+}
+
+function iby_forums_file_download_access($field, $entity_type, $entity) {
+  $ptid = false; $tid = false; $nid = false; $cid = false;
+  if($entity_type == "node") $nid = $entity->nid;
+  elseif($entity_type == "comment") $cid = $entity->cid;
+  else return;
+  return _iby_forums_check_access("file", false, $entity_type, "read", $ptid, $tid, $nid, $cid);
+}
+
+//function iby_forums_field_access($op, $field, $entity_type, $entity, $account) {
+//  exit('bla');
+//  echo "<pre>"; var_dump($op); echo "</pre>"; exit;
+//  echo "<pre>"; var_dump($field); echo "</pre>"; exit;
+//  echo "<pre>"; var_dump($entity_type); echo "</pre>"; exit;
+//  echo "<pre>"; var_dump($entity); echo "</pre>"; exit;
+//  echo "<pre>"; var_dump($account); echo "</pre>"; exit;
+//}
+
+
+function _iby_forums_extract_access_info() {
+  // These are the areas, that we are gonna do the checks
+  $check_areas = array("taxonomy", "forum", "node", "comment");
+
+  // Initializing the return array
+  $info = array();
+
+  // Getting the area from the url - ie. if url = /forum/14734 then arg(0) = forum, arg(1) = 14734
+  $info['area'] = arg(0);
+
+  // If the area is not part of the forums, we return an empty array causing the actual check to fall back to allowed
+  if(!in_array($info['area'], $check_areas)) return array();
+
+  // If we reach this, we are in an area that needs to be checked - we will execute the code for the given area
+  switch($info['area']) {
+
+    // As forums and forum containers are actually taxonomies, some actions will be handled by the taxonomy module
+  case "taxonomy":
+    // Forums are only accessed through forums, when someone is trying to edit
+    // Assume this is an edit attempt
+    $info['action'] = 'edit';
+    $info['tid'] = arg(2);
+    $info['ptid'] = _iby_forums_get_parent_tid(arg(2));
+    break;
+
+  case "forum":
+    if((arg(1) == "add") || (arg(2) == "add")) {
+      // User is adding challenges, creating new forums or adding a VIP room
+      if(isset($_GET['parent']) && $_GET['parent']) {
+        // The parent should be present, since this is the container for the "forum" e.g. VIP Rooms
+        $info['action'] = 'create';
+        $info['ptid'] = _iby_forums_get_parent_tid($_GET['parent']);
+        if(arg(1) != "add") $info['tid'] = arg(1);
+        else $info['tid'] = $info['ptid'];
+
+      } else {
+        // If the parent is not present but arg(2) == add, something is wrong! Fall back to check for create permissions
+        $info['action'] = 'create';
+        $info['tid'] = arg(1);
+        $info['ptid'] = _iby_forums_get_parent_tid(arg(1));
+      }
+
+    } elseif(arg(1) && !arg(2)) {
+      // This is an attempt to see the forum
+      $info['action'] = 'read';
+      $info['tid'] = arg(1);
+      $info['ptid'] = _iby_forums_get_parent_tid(arg(1));
+
+    } elseif(arg(1) && (arg(2) == "tags")) {
+      // This is an attempt to see the forum and sort by tag
+      $info['action'] = 'read';
+      $info['tid'] = arg(1);
+      $info['ptid'] = _iby_forums_get_parent_tid(arg(1));
+
+    } elseif(arg(1) && (arg(2) == "members")) {
+      // This is an attempt to see the forum and sort by tag
+      $info['action'] = 'read';
+      $info['tid'] = arg(1);
+      $info['ptid'] = _iby_forums_get_parent_tid(arg(1));
+
+    } else {
+      // If we are here, something went wrong in the checks, assume edit permissions is needed
+      $info['action'] = 'edit';
+      $info['tid'] = arg(1);
+      $info['ptid'] = _iby_forums_get_parent_tid(arg(1));
+    }
+    break;
+
+  case "node":
+    if(arg(1) == "add") {
+      // User is adding a topic or solution
+      $info['action'] = 'contribute to';
+      $info['tid'] = arg(3);
+      $info['ptid'] = _iby_forums_get_parent_tid(arg(3));
+
+    } elseif(arg(2) == "new_comment") {
+      // User is adding a topic or solution
+      $info['action'] = 'contribute to';
+      $info['ptid'] = _iby_forums_get_parent_tid_by_nid(arg(1));
+      $info['nid'] = arg(1);
+
+    } elseif(arg(2) == "edit") {
+      // User is editing a topic or solution
+      $info['action'] = 'edit';
+      $info['ptid'] = _iby_forums_get_parent_tid_by_nid(arg(1));
+      $info['nid'] = arg(1);
+
+    } elseif(!arg(2) || (arg(2) == "tags")) {
+      // User is reading a topic or solution
+      $info['action'] = 'read';
+      $info['ptid'] = _iby_forums_get_parent_tid_by_nid(arg(1));
+      $info['nid'] = arg(1);
+
+    } else {
+      // If we are here, something went wrong in the checks, assume edit permissions is needed
+      $info['action'] = 'edit';
+      $info['ptid'] = _iby_forums_get_parent_tid_by_nid(arg(1));
+      $info['nid'] = arg(1);
+    }
+    break;
+
+  case "comment":
+    if(arg(1) == "reply") {
+      // User is commenting on a topic or solution
+      $info['action'] = 'contribute to';
+      $info['cid'] = arg(2);
+
+    } elseif(arg(2) == "edit") {
+      // User is editing a topic or solution
+      $info['action'] = 'edit';
+      $info['cid'] = arg(1);
+
+    } elseif(arg(2) == "delete") {
+      // User is deleting a topic or solution
+      $info['action'] = 'create';
+      $info['cid'] = arg(1);
+
+    } else {
+      // If we are here, something went wrong in the checks, assume edit permissions is needed
+      $info['action'] = 'edit';
+      $info['cid'] = arg(1);
+
+    }
+  }
+
+  // Get all available ids
+  if(isset($info['cid']) && $info['cid'])
+    $info['nid'] = _iby_forums_get_nid_by_cid($info['cid']);
+  if(isset($info['nid']) && $info['nid'])
+    $info['tid'] = _iby_forums_get_tid_by_nid($info['nid']);
+  if(isset($info['tid']) && $info['tid'])
+    $info['ptid'] = _iby_forums_get_parent_tid($info['tid']);
+
+  // This is not a forum check
+  if(!$info['ptid']) return array();
+
+  // Everything collected - return to the actual check
+  return $info;
+}
+
+function _iby_forums_check_access($type=false, $account=false, $area=false, $action=false, $ptid=false, $tid=false, $nid=false, $cid=false) {
+  if(!$account) {
+    global $user;
+    $account = $user;
+  }
+  $info = array();
+
+  // Admins has all rights....
+  if(sqtools_is_admin($account)) return true;
+
+  // We will only be asked by the menu here...
+  if(drupal_is_front_page()) return true;
+
+  // These are the areas, that we are gonna do the checks
+  $check_areas = array("taxonomy", "forum", "node", "comment");
+
+  //if(($area == "forum") && ($action == "edit") && ($tid)) {
+  //  echo "<pre>"; var_dump($tid); echo "</pre>"; exit;
+  //}
+
+  // Check to see, if everything needed is supplied through the arguments - i.e. usually NOT a system call
+  if($area && $action && ($cid || $nid || $tid || $ptid)) {
+    // Some of the arguments were supplied - enough to gather the rest by ourself
+    $info['area'] = $area;
+    $info['action'] = $action;
+
+    if($cid) {
+      // We got a comment id, fetch node, forum and forum container ids
+      $info['cid'] = $cid;
+      $info['nid'] = _iby_forums_get_nid_by_cid($info['cid']);
+      $info['tid'] = _iby_forums_get_tid_by_nid($info['nid']);
+      $info['ptid'] = _iby_forums_get_parent_tid($info['tid']);
+
+    } elseif($nid) {
+      // We got a node id, fetch forum and forum container ids
+      $info['nid'] = $nid;
+      $info['tid'] = _iby_forums_get_tid_by_nid($info['nid']);
+      $info['ptid'] = _iby_forums_get_parent_tid($info['tid']);
+
+    } elseif($tid) {
+      // We got a forum id, fetch forum container id
+      $info['tid'] = $tid;
+      $info['ptid'] = _iby_forums_get_parent_tid($info['tid']);
+
+    }
+
+  } else {
+    // Not enough arguments supplied - find information through the URL arguments
+    $info = _iby_forums_extract_access_info();
+  }
+
+  // If the area is not in $check_area  - assume this is not somewhere we want to control
+  if(!isset($info['area']) || !in_array($info['area'], $check_areas)) return true;
+
+  // At this point, we have more checking to do + we need to know which parent forum we are in
+  $info['parent_forum'] = taxonomy_term_load($info['ptid']);
+  if(isset($info['parent_forum']->name)) $info['parent_slug'] = StringTools::slug($info['parent_forum']->name, " ");
+  else $info['parent_slug'] = '';
+  if($info['parent_slug'] == "chat forums") $info['parent_slug'] = "forums";
+  $info['forum'] = taxonomy_term_load($info['tid']);
+
+  // Now we can check if we're in a parent forum and skip all the roles and members checking and simply make sure, the user has the basic permissions
+  if($info['tid'] == $info['ptid']) {
+    if(user_access($info['parent_slug']." full", $account)
+       || user_access("edit ".$info['parent_slug'], $account)
+       || user_access($info['action']." ".$info['parent_slug'], $account)) return true;
+  }
+
+  // Now check permissions by assuming, that any if statement reached, means we need to check more, than we already have
+
+  // We start out by checking if the current forum has a groups list
+  // The newest definition is: ALL forums needs a list of groups and the account needs to be in one of these groups
+  if(isset($info['forum']->field_allowed_roles))
+    $allowed_roles = sqtools_get_lang_value($info['forum']->field_allowed_roles);
+  else $allowed_roles = array();
+
+  // If no groups are defined - only admin can see the forum.
+  // At this point, admin has already been granted access, so if no roles are found, we will not allow anyone in
+  if(!is_array($allowed_roles) || !count($allowed_roles)) return false;
+  elseif(is_array($allowed_roles) && count($allowed_roles)) {
+
+    // This forum is locked by roles, so lets check if the user is allowed
+    $allowed = false;
+    foreach($allowed_roles as $role) {
+      if(isset($account->roles[$role['value']])) {
+        $allowed = true;
+        break;
+      }
+    }
+    if(!$allowed) return false;
+    unset($allowed); // Just to make sure...
+  }
+
+  // We also check if this is a VIP Room and if it has a member list
+  if($info['parent_slug'] == "vip rooms") {
+
+    if(user_access($info['parent_slug']." full", $account)
+       || user_access("edit ".$info['parent_slug'], $account)) return true;
+
+    $private_room = sqtools_get_lang_value($info['forum']->field_vip_private);
+
+    $vip_members = sqtools_get_lang_value($info['forum']->field_vip_members);
+    if(is_array($vip_members) && count($vip_members)) {
+
+      // This VIP Room is locked by membership, so lets check if the user is a member
+      $allowed = false;
+      foreach($vip_members as $vip_member) {
+        if($account->uid == $vip_member['value']) {
+          $allowed = true;
+          break;
+        }
+      }
+      if(!$allowed) return false;
+      unset($allowed); // Just to make sure...
+
+    } elseif($private_room[0]['value']) return false; // This is a private room, without any members yet
+
+    // This is no longer true
+    //if($info['action'] == "read") $info['action'] = "contribute to"; // Nobody has only read access to VIP Rooms...
+  }
+
+  // Now for the more simple checks - whether or not, the current user has access to the currently requested content
+  if(user_access($info['parent_slug']." full", $account) || user_access($info['action']." ".$info['parent_slug'], $account)) return true;
+
+  // If we reach this spot, the account is not allowed to watch the requested content
+  return false;
+}
+
+// This function returns an array of permissions, that can be set within the admin interface
+function iby_forums_permission() {
+  $perms = array();
+
+  $perms['read challenges'] = array('title' => "View Challenges", 'description' => "Can access Challenges", 'restrict access' => false);
+  $perms['contribute to challenges'] = array('title' => "Challenges Contributor", 'description' => "Can contribute to Challenges", 'restrict access' => false);
+  $perms['edit challenges'] = array('title' => "Challenges Editor", 'description' => "Can moderate Challenges", 'restrict access' => false);
+  $perms['create challenges'] = array('title' => "Create Challenges", 'description' => "Can create a new Challenge", 'restrict access' => false);
+  $perms['challenges full'] = array('title' => "Full Control of Challenges", 'description' => "Can control all aspects of Challenges", 'restrict access' => false);
+
+  $perms['read forums'] = array('title' => "View Forums", 'description' => "Can access Forums (only public forums for anonymous users)", 'restrict access' => false);
+  $perms['contribute to forums'] = array('title' => "Forums Contributor", 'description' => "Can contribute to Forums", 'restrict access' => false);
+  $perms['edit forums'] = array('title' => "Forums Editor", 'description' => "Can moderate Forums", 'restrict access' => false);
+  $perms['create forums'] = array('title' => "Create Forums", 'description' => "Can create a new Forum", 'restrict access' => false);
+  $perms['forums full'] = array('title' => "Full Control of Forums", 'description' => "Can control all aspects of Forums", 'restrict access' => false);
+
+  $perms['read tips tricks'] = array('title' => "View Tips & Tricks", 'description' => "Can access Tips & Tricks", 'restrict access' => false);
+  $perms['contribute to tips tricks'] = array('title' => "Tips & Tricks Contributor", 'description' => "Can contribute to Tips & Tricks", 'restrict access' => false);
+  $perms['edit tips tricks'] = array('title' => "Tips & Tricks Editor", 'description' => "Can moderate Tips & Tricks", 'restrict access' => false);
+  $perms['create tips tricks'] = array('title' => "Create Tips & Tricks", 'description' => "Can create a new Tip / Trick", 'restrict access' => false);
+  $perms['tips tricks full'] = array('title' => "Full Control of Tips & Tricks", 'description' => "Can control all aspects of Tips & Tricks", 'restrict access' => false);
+
+  $perms['read vip rooms'] = array('title' => "View VIP Rooms", 'description' => "Can access VIP Room (per invite)", 'restrict access' => false);
+  $perms['contribute to vip rooms'] = array('title' => "VIP Rooms Contributor", 'description' => "Can contribute to VIP Rooms (per invite)", 'restrict access' => false);
+  $perms['edit vip rooms'] = array('title' => "VIP Rooms Editor", 'description' => "Can moderate VIP Rooms", 'restrict access' => false);
+  $perms['create vip rooms'] = array('title' => "Create VIP Rooms", 'description' => "Can create a new VIP Room", 'restrict access' => false);
+  $perms['vip rooms full'] = array('title' => "Full Control of VIP Rooms", 'description' => "Can control all aspects of VIP Rooms", 'restrict access' => false);
+
+  return $perms;
+}
+
+function iby_forums_menu() {
+  $items = array();
+
+  $items['recent'] = array(
+    'title' => 'Recent activity',
+    'page callback' => 'iby_forums_recent',
+    'access callback' => TRUE,
+  );
+
+  $items['recent/mark/%'] = array(
+    'page callback' => 'iby_forums_recent_mark_ajax',
+    'page arguments' => array(2),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['forum'] = array(
+    'title' => 'Forums',
+    'page callback' => 'iby_forum_page',
+    'access callback' => FALSE,
+  );
+
+  $items['forum/%iby_forum_forum'] = array(
+    'title' => 'Forums',
+    'page callback' => 'iby_forum_page',
+    'access callback' => '_iby_forums_check_access',
+    'access arguments' => array('forum_view'),
+    'page arguments' => array(1),
+  );
+
+  $items['forum/%iby_forum_forum/tags_autocomplete'] = array(
+    'title' => 'Forum tags autocomplete',
+    'page callback' => 'iby_forums_tags_autocomplete',
+    'access callback' => TRUE,
+    'page arguments' => array(1),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['forum/%iby_forum_forum/files'] = array(
+    'title' => 'Forums files',
+    'page callback' => 'iby_forum_files',
+    'access callback' => '_iby_forums_check_access',
+    'page arguments' => array(1),
+    'access arguments' => array('forum_files'),
+  );
+
+  $items['forum/%iby_forum_forum/members'] = array(
+    'title' => 'Forums members',
+    'page callback' => 'iby_forum_members',
+    'access callback' => '_iby_forums_check_access',
+    'page arguments' => array(1),
+    'access arguments' => array('forum_members'),
+  );
+
+  $items['forum/%iby_forum_forum/member/%/remove'] = array(
+    'title' => 'Remove forum member',
+    'page callback' => 'iby_forums_remove_member',
+    'access callback' => '_iby_forums_check_access',
+    'page arguments' => array(1, 3),
+    'access arguments' => array('remove_forum_member'),
+  );
+
+  $items['forum/add/forum/%taxonomy_vocabulary_machine_name'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('taxonomy_form_term', array(), 3),
+    'access callback' => '_iby_forums_check_access',
+    'access arguments' => array('forum_add_forum'),
+    'file' => 'taxonomy.admin.inc',
+    'file path' => drupal_get_path('module', 'taxonomy')
+  );
+
+  $items['upload/wysiwyg_file'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('add_wysiwyg_file_form', array()),
+    'access callback' => true,
+  );
+
+  $items['upload/wysiwyg_file/private'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('add_wysiwyg_private_file_form', array()),
+    'access callback' => true,
+  );
+
+  return $items;
+}
+
+//function iby_forums_query_alter(&$query) {
+//  //echo "\n<!-- "; var_export($query); echo " -->\n";
+//}
+
+function iby_forums_query_comment_filter_alter(&$query) {
+  $query_cache = &drupal_static('iby_forum_tagging', array());
+
+  if((arg(0) == "node") && (arg(2) == "tags") && isset($query_cache['cids'])) {
+    $nid = arg(1);
+
+    $cid_top_parents = array();
+    $cur_top_cid = 0;
+
+    $cids_query = db_select('comment', 'c')->fields('c', array('cid', 'pid'))->condition('c.nid', $nid);
+    $cids_query->addExpression('SUBSTRING(c.thread, 1, (LENGTH(c.thread) - 1))', 'torder');
+    $cids_query->orderBy('torder', 'ASC');
+    $res = $cids_query->execute();
+    if($res) {
+      foreach($res as $row) {
+        if($row->pid && isset($cid_top_parents[$cur_top_cid]) && !in_array($row->cid, $cid_top_parents[$cur_top_cid])) {
+          $cid_top_parents[$cur_top_cid][] = $row->cid;
+        } else {
+          $cur_top_cid = $row->cid;
+          $cid_top_parents[$cur_top_cid] = array();
+        }
+      }
+    }
+
+    $filtered_cids = array();
+
+    foreach($query_cache['cids'] as $filter_cid) {
+      foreach($cid_top_parents as $top_cid=>$child_cids) {
+        if(($top_cid == $filter_cid) || in_array($filter_cid, $child_cids)) {
+          if(!in_array($top_cid, $filtered_cids)) $filtered_cids[] = $top_cid;
+          foreach($child_cids as $child_cid) if(!in_array($child_cid, $filtered_cids)) $filtered_cids[] = $child_cid;
+        }
+      }
+    }
+
+    if(count($filtered_cids)) $query->condition('c.cid', $filtered_cids, 'IN');
+    else $query->condition('true', 'false');
+  }
+
+
+  // This reverses the order of comments
+  //if( ($node = $query->getMetaData('node')) && (get_class($query) == 'PagerDefault') ) {
+  //  $orderby =& $query->getOrderBy();
+  //  $expressions =& $query->getExpressions();
+  //  if (isset($orderby['torder'])) {
+  //    unset($expressions['torder']);
+  //    unset($orderby['torder']);
+  //    $orderby['c.thread'] = 'DESC';
+  //  } else {
+  //    $orderby['c.cid'] = 'DESC';
+  //  }
+  //}
+}
+
+function iby_forums_theme($existing, $type, $theme, $path) {
+  $forum_term = forum_forum_load(0);
+  $templates = array();
+
+  $themes_path = $_SERVER['DOCUMENT_ROOT']."/".sqtools_default_theme_path()."/";
+
+  $module_templates_path = drupal_get_path('module', 'iby_forums')."/templates";
+  $module_includes_path = drupal_get_path('module', 'iby_forums')."/includes";
+
+  $templates['right_box_followers'] = array('template' => "right-box-followers");
+  $templates['right_box_tags'] = array('template' => "right-box-tags");
+  $templates['right_box_related'] = array('template' => "right-box-related");
+  $templates['right_box_tt_suggestion'] = array('template' => "right-box-tt-suggestion");
+  $templates['right_box_most_useful'] = array('template' => "right-box-most-useful");
+  $templates['right_box_saved'] = array('template' => "right-box-saved");
+
+  $templates['display_data_grid'] = array('template' => "display-data-grid");
+
+  $templates['ifollow_challenges'] = array('template' => "ifollow-challenges");
+  $templates['ifollow_nodes'] = array('template' => "ifollow-nodes");
+  $templates['ifollow_users'] = array('template' => "ifollow-users");
+
+  $templates['right_box_recent_activity'] = array('template' => "right-box-recent-activity");
+  $templates['right_box_newest_members'] = array('template' => "right-box-newest-members");
+
+  $templates['ibyforums'] = array('path' => $module_templates_path, 'template' => "ibyforums");
+  $templates['ibyforums__breadcrumb'] = array('path' => $module_templates_path, 'template' => "ibyforums--breadcrumb");
+  $templates['ibyforums__filters'] = array('path' => $module_templates_path, 'template' => "ibyforums--filters");
+  $templates['ibyforums__sorting'] = array('path' => $module_templates_path, 'template' => "ibyforums--sorting");
+
+  $templates['ibyforum__comment'] = array('path' => $module_templates_path, 'template' => "ibyforum--comment");
+  $templates['ibyforum__comment_wrapper'] = array('path' => $module_templates_path, 'template' => "ibyforum--comment-wrapper");
+
+  $templates['ibyforum__node'] = array('path' => $module_templates_path, 'template' => "ibyforum--node");
+  $templates['ibyforum__view'] = array('path' => $module_templates_path, 'template' => "ibyforum--view");
+  $templates['ibyforum__right'] = array('path' => $module_templates_path, 'template' => "ibyforum--right");
+  $templates['ibyforum__files'] = array('path' => $module_templates_path, 'template' => "ibyforum--files");
+  $templates['ibyforum__members'] = array('path' => $module_templates_path, 'template' => "ibyforum--members");
+  $templates['ibyforum__topic__view'] = array('path' => $module_templates_path, 'template' => "ibyforum--topic--view");
+  $templates['ibyforum__topic__list'] = array('path' => $module_templates_path, 'template' => "ibyforum--topic--list");
+  $templates['ibyforum__topic__grid'] = array('path' => $module_templates_path, 'template' => "ibyforum--topic--grid");
+
+  // Chat Forums specials
+  $templates['dashboard__chat__forums__recent'] = array('path' => $themes_path, 'template' => "dashboard--chat--forums--recent");
+
+  // Challenges specials
+  $templates['challenges__full'] = array('path' => $module_templates_path, 'template' => "challenges--full");
+
+  // VIP Rooms specials
+  $templates['vip__rooms__active'] = array('path' => $module_templates_path, 'template' => "vip--rooms--active");
+  $templates['vip__rooms__archived'] = array('path' => $module_templates_path, 'template' => "vip--rooms--archived");
+  $templates['vip__rooms__menu'] = array('path' => $module_templates_path, 'template' => "vip--rooms--menu");
+  $templates['vip__rooms__front__right'] = array('path' => $module_templates_path, 'template' => "vip--rooms--front--right");
+
+  // Tips & Tricks specials
+  $templates['tips__tricks__front__right'] = array('path' => $module_templates_path, 'template' => "tips--tricks--front--right");
+
+  foreach($forum_term->forums as $forum) {
+    if((count($forum->parents[0]) == 1) && ($forum->parents[0] == "0")) {
+      $call_name = StringTools::slug($forum->name, "__");
+      $real_name = StringTools::slug($forum->name, "--");
+
+      if(file_exists($themes_path.$real_name."--forum.tpl.php"))
+        $templates[$call_name.'__forum'] = array('template' => $real_name."--forum");
+
+      if(file_exists($themes_path.$real_name."--active.tpl.php"))
+        $templates[$call_name.'__active'] = array('template' => $real_name."--active");
+
+      if(file_exists($themes_path.$real_name."--filters.tpl.php"))
+        $templates[$call_name.'__filters'] = array('template' => $real_name."--filters");
+      else $templates[$call_name.'__filters'] = array('path' => $module_templates_path, 'template' => "ibyforums--filters");
+
+      if(file_exists($themes_path.$real_name."--sorting.tpl.php"))
+        $templates[$call_name.'__sorting'] = array('template' => $real_name."--sorting");
+      else $templates[$call_name.'__sorting'] = array('path' => $module_templates_path, 'template' => "ibyforums--sorting");
+
+      if(file_exists($themes_path.$real_name."--comment.tpl.php"))
+        $templates[$call_name.'__comment'] = array('template' => $real_name."--comment");
+      else $templates[$call_name.'__comment'] = array('path' => $module_templates_path, 'template' => "ibyforum--comment");
+
+      if(file_exists($themes_path.$real_name."--comment-wrapper.tpl.php"))
+        $templates[$call_name.'__comment_wrapper'] = array('template' => $real_name."--comment-wrapper");
+      else $templates[$call_name.'__comment_wrapper'] = array('path' => $module_templates_path, 'template' => "ibyforum--comment-wrapper");
+
+      if(file_exists($themes_path.$real_name."--files.tpl.php"))
+        $templates[$call_name.'__files'] = array('template' => $real_name."--files");
+      else $templates[$call_name.'__files'] = array('path' => $module_templates_path, 'template' => "ibyforum--files");
+
+      if(file_exists($themes_path.$real_name."--members.tpl.php"))
+        $templates[$call_name.'__members'] = array('template' => $real_name."--members");
+      else $templates[$call_name.'__members'] = array('path' => $module_templates_path, 'template' => "ibyforum--members");
+
+      if(file_exists($themes_path.$real_name."--node.tpl.php"))
+        $templates[$call_name.'__node'] = array('template' => $real_name."--node");
+      else $templates[$call_name.'__node'] = array('path' => $module_templates_path, 'template' => "ibyforum--node");
+
+      if(file_exists($themes_path.$real_name."--forums.tpl.php"))
+        $templates[$call_name.'__forums'] = array('template' => $real_name."--forums");
+      else $templates[$call_name.'__forums'] = array('path' => $module_templates_path, 'template' => "ibyforums");
+
+      if(file_exists($themes_path.$real_name."--breadcrumb.tpl.php"))
+        $templates[$call_name.'__breadcrumb'] = array('template' => $real_name."--breadcrumb");
+      else $templates[$call_name.'__breadcrumb'] = array('path' => $module_templates_path, 'template' => "ibyforums--breadcrumb");
+
+      if(file_exists($themes_path.$real_name."--view.tpl.php"))
+        $templates[$call_name.'__view'] = array('template' => $real_name."--view");
+      else $templates[$call_name.'__view'] = array('path' => $module_templates_path, 'template' => "ibyforum--view");
+
+      if(file_exists($themes_path.$real_name."--list.tpl.php"))
+        $templates[$call_name.'__list'] = array('template' => $real_name."--list");
+      else $templates[$call_name.'__list'] = array('path' => $module_templates_path, 'template' => "ibyforum--list");
+
+      if(file_exists($themes_path.$real_name."--grid.tpl.php"))
+        $templates[$call_name.'__grid'] = array('template' => $real_name."--grid");
+      else $templates[$call_name.'__grid'] = array('path' => $module_templates_path, 'template' => "ibyforum--grid");
+
+      if(file_exists($themes_path.$real_name."--right.tpl.php"))
+        $templates[$call_name.'__right'] = array('template' => $real_name."--right");
+      else $templates[$call_name.'__right'] = array('path' => $module_templates_path, 'template' => "ibyforum--right");
+
+      if(file_exists($themes_path.$real_name."--node.tpl.php"))
+        $templates[$call_name.'__node'] = array('template' => $real_name."--node");
+      else $templates[$call_name.'__node'] = array('path' => $module_templates_path, 'template' => "ibyforum--node");
+
+      if(file_exists($themes_path.$real_name."--topic--view.tpl.php"))
+        $templates[$call_name.'__topic__view'] = array('template' => $real_name."--topic--view");
+      else $templates[$call_name.'__topic__view'] = array('path' => $module_templates_path, 'template' => "ibyforum--topic--view");
+
+      if(file_exists($themes_path.$real_name."--node--add.tpl.php"))
+        $templates[$call_name.'__node__add'] = array('template' => $real_name."--node--add");
+
+      if(file_exists($themes_path.$real_name."--topic--list.tpl.php"))
+        $templates[$call_name.'__topic__list'] = array('template' => $real_name."--topic--list");
+      else $templates[$call_name.'__topic__list'] = array('path' => $module_templates_path, 'template' => "ibyforum--topic--list");
+
+      if(file_exists($themes_path.$real_name."--topic--grid.tpl.php"))
+        $templates[$call_name.'__topic__grid'] = array('template' => $real_name."--topic--grid");
+      else $templates[$call_name.'__topic__grid'] = array('path' => $module_templates_path, 'template' => "ibyforum--topic--grid");
+
+    }
+  }
+  return $templates;
+}
+
+function iby_forums_comment_form_submit($form, &$form_state) {
+  return $form;
+}
+
+function iby_forums_form_comment_form_alter(&$form, &$form_state, $form_id) {
+}
+
+function iby_forums_form_add_wysiwyg_private_file_form_alter(&$form, &$form_state, $form_id) {
+  $form['uploaded_file'] = array(
+                                 '#type' => 'managed_file',
+                                 '#title' => t('Picture'),
+                                 '#status' => FILE_STATUS_PERMANENT,
+                                 '#upload_location' => 'private://'
+                                 );
+
+  if(isset($form_state['complete form']['uploaded_file']['#file']) && $form_state['complete form']['uploaded_file']['#file']) {
+    $file = file_load($form_state['values']['uploaded_file']);
+    $file->status = FILE_STATUS_PERMANENT;
+    file_save($file);
+
+    $commands = array();
+    $image_str = theme('image', array('path' => file_create_url($form_state['complete form']['uploaded_file']['#file']->uri), 'height' => '120px'));
+    $commands[] = ajax_command_invoke(NULL, 'easy_image_upload_cb', array($image_str));
+    $page = array('#type' => 'ajax', '#commands' => $commands);
+    ajax_deliver($page);
+  }
+  return $form;
+}
+
+function iby_forums_form_add_wysiwyg_file_form_alter(&$form, &$form_state, $form_id) {
+  $form['uploaded_file'] = array(
+                                 '#type' => 'managed_file',
+                                 '#description' => t('Allowed extensions: gif png jpg jpeg'),
+                                 '#upload_validators' => array(
+                                                               'file_validate_extensions' => array('gif png jpg jpeg'),
+                                                               //'file_validate_size' => array(MAX_FILE_SIZE*1024*1024),
+                                                               ),
+                                 '#title' => t('Picture'),
+                                 '#status' => FILE_STATUS_PERMANENT,
+                                 '#upload_location' => 'public://'
+                                 );
+
+  if(isset($form_state['complete form']['uploaded_file']['#file']) && $form_state['complete form']['uploaded_file']['#file']) {
+    $file = file_load($form_state['values']['uploaded_file']);
+    $file->status = FILE_STATUS_PERMANENT;
+    file_save($file);
+
+    $commands = array();
+    $image_str = theme('image', array('path' => file_create_url($form_state['complete form']['uploaded_file']['#file']->uri), 'height' => '120px'));
+    $commands[] = ajax_command_invoke(NULL, 'easy_image_upload_cb', array($image_str));
+    $page = array('#type' => 'ajax', '#commands' => $commands);
+    ajax_deliver($page);
+  }
+  return $form;
+}
+
+function add_wysiwyg_private_file_form($args) {
+}
+
+function add_wysiwyg_file_form($args) {
+}
+
+
+
+/**
+ * Implements hook_form_submit.
+ */
+function iby_forums_form_add_wysiwyg_file_form_submit($form, &$form_state) {
+  return $form;
+}
+
+function iby_forums_form_add_wysiwyg_private_file_form_submit($form, &$form_state) {
+  return $form;
+}
+
+function iby_forums_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id == 'forum_node_form') {
+    unset($form['shadow']);
+  }
+}
