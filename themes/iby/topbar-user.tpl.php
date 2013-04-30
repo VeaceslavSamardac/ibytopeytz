@@ -2,13 +2,17 @@
 <?php
   $account = user_load($user->uid);
 
-if(iby_forums_recent_new()) $style = "background: transparent url('/sites/all/themes/iby/images/recent_blink.gif') left 7px no-repeat;";
-else $style = "background: transparent url('/sites/all/themes/iby/images/recent_none.gif') left 7px no-repeat;";
+  if (iby_forums_recent_new()) {
+    $style = "background: transparent url('/" . drupal_get_path('theme', 'iby') . "/images/recent_blink.gif') left 7px no-repeat;";
+  }
+  else {
+    $style = "background: transparent url('/" . drupal_get_path('theme', 'iby') . "images/recent_none.gif') left 7px no-repeat;";
+  }  
 ?>
 <div id="topbar-user">
 	<div class="topbar_left">
 
-		<div id="recent-activity-box" style="<?php echo $style;?>">
+		<div id="recent-activity-box" style="<?php echo $style; ?>">
 			<a href="/recent?c=1" style="font-size:12px;font-weight:bold;color:#fff;text-decoration:none;"><span class="recent_activity_box">Recent activity<?php echo(iby_forums_recent_new()?' (<span class="recent-counter">'.iby_forums_recent_new()."</span>)":'');?></span></a>
 		</div>
 

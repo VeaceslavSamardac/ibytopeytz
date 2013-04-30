@@ -45,7 +45,7 @@ foreach($tags->tags as $tag) {
   echo '    <li '.(($selected)?'class="selected"':'').' style="margin-top:'.$margin_top.'px;font-size:'.$font_size.'px;">';
   echo '<a class="linktext" href="'.$link.'#tags_box">'.$tag->name.'</a>';
   if($selected) {
-    echo '<a class="linkimage" id="tag'.$tag->tid.'" href="'.$link.'#tags_box"><img src="/sites/all/themes/iby/images/close_button.png" /></a>';
+    echo '<a class="linkimage" id="tag'.$tag->tid.'" href="'.$link.'#tags_box"><img src="/' . drupal_get_path('theme', 'iby') . '/images/close_button.png" /></a>';
     echo '<script type="text/javascript">var pos_left = jQuery("#tag'.$tag->tid.'").parent().width(); jQuery("#tag'.$tag->tid.'").css("left", (pos_left-15));</script>';
   }
   echo '    </li>';
