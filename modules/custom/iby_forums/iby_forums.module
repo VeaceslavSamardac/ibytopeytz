@@ -1093,9 +1093,13 @@ function iby_forums_get_nodes_filter_tags($forum_tid) {
 
     if($res) {
       foreach($res as $row) {
-        if(!isset($tags_tids[$row->field_tags_tid])) $tags_tids[$row->field_tags_tid] = 0;
+        if (!isset($tags_tids[$row->field_tags_tid])) {
+          $tags_tids[$row->field_tags_tid] = 0;
+        }
         $tags_tids[$row->field_tags_tid]++;
-        if($row->nid && !in_array($query_cache['nids'])) $query_cache['nids'][] = $row->nid;
+        if ($row->nid && !in_array($row->nid, $query_cache['nids'])) {
+          $query_cache['nids'][] = $row->nid;
+        }
       }
     }
   }
