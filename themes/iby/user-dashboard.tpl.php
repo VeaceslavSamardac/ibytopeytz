@@ -222,7 +222,7 @@
         </span>
       </div>
       <?php
-        if($moderator_topic->field_tags['und'][0]['tid'] != 0) {
+        if (isset($moderator_topic->field_tags['und']) && $moderator_topic->field_tags['und'][0]['tid'] != 0) {
           $tid = $moderator_topic->field_tags['und'][0]['tid'];
         } else {
           $tid = 0;
