@@ -110,16 +110,16 @@ function iby_forums_preprocess_challenges__forums(&$variables) {
 
   if(isset($query_cache['tids']) && is_array($query_cache['tids']) && count($query_cache['tids']))
     
-	$query->condition('ttd.tid', $query_cache['tids'], 'IN');
-	if(isset($_GET) && ($_GET['view'] == 'list')) {
-		$query->limit(10);
-	} elseif(isset($_GET) && ($_GET['view'] == 'grid')) {
-		$query->limit(6);
-	} elseif(isset($_COOKIE) && ($_COOKIE['view_option'] == 'list')) {
-		$query->limit(10);
-	} else {
-		$query->limit(6);
-	}
+  $query->condition('ttd.tid', $query_cache['tids'], 'IN');
+  if(isset($_GET['view']) && ($_GET['view'] == 'list')) {
+    $query->limit(10);
+  } elseif(isset($_GET['view']) && ($_GET['view'] == 'grid')) {
+    $query->limit(6);
+  } elseif(isset($_COOKIE['view_option']) && ($_COOKIE['view_option'] == 'list')) {
+    $query->limit(10);
+  } else {
+    $query->limit(6);
+  }
 	
   $result = $query->execute();
   
