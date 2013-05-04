@@ -9,10 +9,10 @@
 /* IBY Forum full view */
 .ibyforum-full { margin: 15px 0 0 4px; width: 745px; clear: both; font-size: 12px; background-color: #7AB800; text-align: left; 
 }
-.ibyforum-full.type-message { background: #F9F7F2 url(/sites/all/themes/iby/images/type_bg_message.png) center top no-repeat; padding-top: 5px;}
-.ibyforum-full.type-all { background: #F9F7F2 url(/sites/all/themes/iby/images/type_bg_all.png) center top no-repeat; padding-top: 5px;}
-.ibyforum-full.type-continence { background: #F9F7F2 url(/sites/all/themes/iby/images/type_bg_green.png) left top no-repeat; padding-top: 5px;}
-.ibyforum-full.type-ostomy { background: #F9F7F2 url(/sites/all/themes/iby/images/type_bg_blue.png) left top no-repeat; padding-top: 5px;}
+.ibyforum-full.type-message { background: #F9F7F2 url(../images/type_bg_message.png) center top no-repeat; padding-top: 5px;}
+.ibyforum-full.type-all { background: #F9F7F2 url(../images/type_bg_all.png) center top no-repeat; padding-top: 5px;}
+.ibyforum-full.type-continence { background: #F9F7F2 url(../images/type_bg_green.png) left top no-repeat; padding-top: 5px;}
+.ibyforum-full.type-ostomy { background: #F9F7F2 url(../images/type_bg_blue.png) left top no-repeat; padding-top: 5px;}
 .ibyforum-full.type-all .challenges-enter { width: 200px; margin: auto; margin-top: 0; color: #fff; /*background-color: #7ab800;*/ }
 .ibyforum-full.type-continence .challenges-enter { width: 200px; margin: auto; margin-top: 0; color: #fff; /*background-color: #7AB800;*/ }
 .ibyforum-full.type-ostomy .challenges-enter { width: 200px; margin: auto; margin-top: 0; color: #fff; /*background-color: #0065BD;*/ }
@@ -137,15 +137,15 @@
 .tag-cloud { margin: 0; padding: 0; margin-left: 10px; margin-top: 10px; float: left; }
 .tag-cloud .tag-cloud-tag { float: left; margin: 0; padding: 0; margin-left: 15px; position: relative; padding-top: 2px; padding-bottom: 15px; }
 .tag-cloud .tag-cloud-tag a { color: #818485; padding: 4px; text-decoration: none; }
-.tag-cloud .tag-cloud-tag.selected a.linkimage { float: right; display: block; position: absolute; top: -19px; } /*url(/sites/all/themes/iby/images/close_button.png) right top no-repeat; }*/
-.tag-cloud .tag-cloud-tag.selected a.linktext { font-weight: bold; background: #f1ecdf } /*url(/sites/all/themes/iby/images/close_button.png) right top no-repeat; }*/
+.tag-cloud .tag-cloud-tag.selected a.linkimage { float: right; display: block; position: absolute; top: -19px; } /*url(../images/close_button.png) right top no-repeat; }*/
+.tag-cloud .tag-cloud-tag.selected a.linktext { font-weight: bold; background: #f1ecdf } /*url(../images/close_button.png) right top no-repeat; }*/
 
 /* Tag box */
 .tag-box { list-style: none; margin: 0; padding: 0; margin-left: 10px; margin-top: 15px; }
 .tag-box li { float: left; margin: 0; padding: 0; margin-right: 17px; position: relative; padding-bottom: 15px; }
 .tag-box li a { color: #818485; padding: 4px; text-decoration: none; }
-.tag-box li.selected a.linkimage { float: right; display: block; position: absolute; top: -19px; } /*url(/sites/all/themes/iby/images/close_button.png) right top no-repeat; }*/
-.tag-box li.selected a.linktext { font-weight: bold; background: #f1ecdf } /*url(/sites/all/themes/iby/images/close_button.png) right top no-repeat; }*/
+.tag-box li.selected a.linkimage { float: right; display: block; position: absolute; top: -19px; } /*url(../images/close_button.png) right top no-repeat; }*/
+.tag-box li.selected a.linktext { font-weight: bold; background: #f1ecdf } /*url(../images/close_button.png) right top no-repeat; }*/
 
 /* Suggestion box */
 .suggestion-box h3 { color: #00b0ca; }
@@ -197,15 +197,15 @@
 
 /* Type tabs */
 .ibyforum-type-all, .ibyforum-type-continence, .ibyforum-type-ostomy { font-weight: bold; float: left; height: 28px; font-size: 12px; color: #aaa; margin-left: 10px; padding-top: 5px; text-align: center; text-decoration: none; }
-.ibyforum-type-all { display: block; width: 60px; background: transparent url(/sites/all/themes/iby/images/type_tab_all.png) left -33px no-repeat; }
-.ibyforum-type-continence { display: block; width: 100px; background: transparent url(/sites/all/themes/iby/images/type_tab_continence.png) left -33px no-repeat; }
-.ibyforum-type-ostomy { display: block; width: 100px; background: transparent url(/sites/all/themes/iby/images/type_tab_ostomy.png) left -33px no-repeat; }
+.ibyforum-type-all { display: block; width: 60px; background: transparent url(../images/type_tab_all.png) left -33px no-repeat; }
+.ibyforum-type-continence { display: block; width: 100px; background: transparent url(../images/type_tab_continence.png) left -33px no-repeat; }
+.ibyforum-type-ostomy { display: block; width: 100px; background: transparent url(../images/type_tab_ostomy.png) left -33px no-repeat; }
 .ibyforum-type-active { color: #666; }
  
-.ibyforum-type-all.ibyforum-type-active {display: block; width: 60px; background: transparent url(/sites/all/themes/iby/images/type_tab_all.png) left top no-repeat;}
-.ibyforum-type-ostomy.ibyforum-type-active{display: block; width: 100px; background: transparent url(/sites/all/themes/iby/images/type_tab_ostomy.png) left 0 no-repeat;}
+.ibyforum-type-all.ibyforum-type-active {display: block; width: 60px; background: transparent url(../images/type_tab_all.png) left top no-repeat;}
+.ibyforum-type-ostomy.ibyforum-type-active{display: block; width: 100px; background: transparent url(../images/type_tab_ostomy.png) left 0 no-repeat;}
 .ibyforum-type-continence.ibyforum-type-active {
-	display: block; width: 100px; background: transparent url(/sites/all/themes/iby/images/type_tab_continence.png) left 0px no-repeat;
+	display: block; width: 100px; background: transparent url(../images/type_tab_continence.png) left 0px no-repeat;
 }
 
 
