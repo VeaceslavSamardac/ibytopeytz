@@ -8,14 +8,19 @@ function sq_ajax_popup_init() {
   drupal_add_library('system', 'drupal.ajax');
   drupal_add_library('system', 'jquery.form');
 
-  if(!isset($javascript['sites/all/modules/sq_ajax_popup/js/script.js']))
-    drupal_add_js('sites/all/modules/sq_ajax_popup/js/script.js');
+  $path_to_module = drupal_get_path('module', 'sq_ajax_popup');
 
-  if(!isset($javascript['sites/all/modules/sq_ajax_popup/js/jquery.tools.overlay.min.js']))
-    drupal_add_js('sites/all/modules/sq_ajax_popup/js/jquery.tools.overlay.min.js');
+  if (!isset($javascript[$path_to_module . '/js/script.js'])) {
+    drupal_add_js($path_to_module . '/js/script.js');
+  }
 
-  if(!isset($javascript['sites/all/modules/sq_ajax_popup/js/jquery.tools.tooltip.min.js']))
-    drupal_add_js('sites/all/modules/sq_ajax_popup/js/jquery.tools.tooltip.min.js');
+  if (!isset($javascript[$path_to_module . '/js/jquery.tools.overlay.min.js'])) {
+    drupal_add_js($path_to_module . '/js/jquery.tools.overlay.min.js');
+  }
+
+  if (!isset($javascript[$path_to_module . '/js/jquery.tools.tooltip.min.js'])) {
+    drupal_add_js($path_to_module . '/js/jquery.tools.tooltip.min.js');
+  }
 
   $profiles = wysiwyg_profile_load_all();
   foreach($profiles as $profile) {
