@@ -79,10 +79,10 @@ h1 a, h2 a, h3 a { color: #00b0ca } /*color: #0fa9c1; }*/
 
 .page-dashboard .bottom-info .community-info .users-online,
 .page-dashboard .bottom-info .community-info .community-members,
-.page-dashboard .bottom-info .community-info .total-posts { width: 95px; padding-left: 20px; height: 30px; float: left; font-size: 11px; color: #666; background: transparent url(/sites/all/themes/iby/images/balloon_red.png) left top no-repeat; }
+.page-dashboard .bottom-info .community-info .total-posts { width: 95px; padding-left: 20px; height: 30px; float: left; font-size: 11px; color: #666; background: transparent url(../images/balloon_red.png) left top no-repeat; }
 
 .page-dashboard .bottom-info .community-info .users-online { }
-.page-dashboard .bottom-info .community-info .community-members { background-image: url(/sites/all/themes/iby/images/balloon_blue.png); }
+.page-dashboard .bottom-info .community-info .community-members { background-image: url(../images/balloon_blue.png); }
 .page-dashboard .bottom-info .community-info .total-posts { }
 
 .page-dashboard .bottom-info .community-info .newest-member { margin-top: 20px; }
@@ -430,11 +430,11 @@ body.page-user-flas-follow .profile-info { width: 745px; }
 
 .user-rightbar.user-com-rightbar .user-rightbar-bottom { padding-left: 2px; }
 .user-rightbar.user-com-rightbar .cc_item { padding-left: 48px; height: 40px; }
-.user-rightbar.user-com-rightbar .cc_item.pmessage { height: 32px; padding-top: 9px; background: transparent url(/sites/all/themes/iby/images/cc_message.png) left top no-repeat; }
-.user-rightbar.user-com-rightbar .cc_item.email { height: 32px; padding-top: 9px; background: transparent url(/sites/all/themes/iby/images/cc_email.png) left top no-repeat; }
-.user-rightbar.user-com-rightbar .cc_item.msn { height: 32px; padding-top: 8px; background: transparent url(/sites/all/themes/iby/images/cc_msn.png) left top no-repeat; }
-.user-rightbar.user-com-rightbar .cc_item.aim { height: 32px; padding-top: 9px; background: transparent url(/sites/all/themes/iby/images/cc_aim.png) left top no-repeat; }
-.user-rightbar.user-com-rightbar .cc_item.skype { height: 32px; padding-top: 10px; background: transparent url(/sites/all/themes/iby/images/cc_skype.png) left top no-repeat; }
+.user-rightbar.user-com-rightbar .cc_item.pmessage { height: 32px; padding-top: 9px; background: transparent url(../images/cc_message.png) left top no-repeat; }
+.user-rightbar.user-com-rightbar .cc_item.email { height: 32px; padding-top: 9px; background: transparent url(../images/cc_email.png) left top no-repeat; }
+.user-rightbar.user-com-rightbar .cc_item.msn { height: 32px; padding-top: 8px; background: transparent url(../images/cc_msn.png) left top no-repeat; }
+.user-rightbar.user-com-rightbar .cc_item.aim { height: 32px; padding-top: 9px; background: transparent url(../images/cc_aim.png) left top no-repeat; }
+.user-rightbar.user-com-rightbar .cc_item.skype { height: 32px; padding-top: 10px; background: transparent url(../images/cc_skype.png) left top no-repeat; }
 .user-rightbar.user-com-rightbar .notice { width: 165px; text-align: center; padding: 0; margin-bottom: 4px; font-weight: bold; }
 .user-rightbar.user-com-rightbar .label { }
 .user-rightbar.user-com-rightbar .value { font-weight: bold; }
@@ -442,11 +442,11 @@ body.page-user-flas-follow .profile-info { width: 745px; }
 
 .contact_dropdown_body .user-rightbar-bottom { padding-left: 2px; }
 .contact_dropdown_body .cc_item { padding-left: 48px; height: 40px; }
-.contact_dropdown_body .cc_item.pmessage { height: 32px; padding-top: 9px; background: transparent url(/sites/all/themes/iby/images/cc_message_contactdropdown.png) left top no-repeat; }
-.contact_dropdown_body .cc_item.email { height: 32px; padding-top: 9px; background: transparent url(/sites/all/themes/iby/images/cc_email_contactdropdown.png) left top no-repeat; }
-.contact_dropdown_body .cc_item.msn { height: 32px; padding-top: 8px; background: transparent url(/sites/all/themes/iby/images/cc_msn_contactdropdown.png) left top no-repeat; }
-.contact_dropdown_body .cc_item.aim { height: 32px; padding-top: 9px; background: transparent url(/sites/all/themes/iby/images/cc_aim_contactdropdown.png) left top no-repeat; }
-.contact_dropdown_body .cc_item.skype { height: 32px; padding-top: 10px; background: transparent url(/sites/all/themes/iby/images/cc_skype_contactdropdown.png) left top no-repeat; }
+.contact_dropdown_body .cc_item.pmessage { height: 32px; padding-top: 9px; background: transparent url(../images/cc_message_contactdropdown.png) left top no-repeat; }
+.contact_dropdown_body .cc_item.email { height: 32px; padding-top: 9px; background: transparent url(../images/cc_email_contactdropdown.png) left top no-repeat; }
+.contact_dropdown_body .cc_item.msn { height: 32px; padding-top: 8px; background: transparent url(../images/cc_msn_contactdropdown.png) left top no-repeat; }
+.contact_dropdown_body .cc_item.aim { height: 32px; padding-top: 9px; background: transparent url(../images/cc_aim_contactdropdown.png) left top no-repeat; }
+.contact_dropdown_body .cc_item.skype { height: 32px; padding-top: 10px; background: transparent url(../images/cc_skype_contactdropdown.png) left top no-repeat; }
 .contact_dropdown_body .notice { width: 165px; text-align: center; padding: 0; margin-bottom: 4px; font-weight: bold; }
 .contact_dropdown_body .label { }
 .contact_dropdown_body .value { font-weight: bold; }
@@ -495,11 +495,11 @@ body.page-user-flas-follow .profile-info { width: 745px; }
 }
 
 /* Throbber - borrowed from system.base.css and then overriden */
-.ajax-progress .throbber { background: transparent url(/sites/all/themes/iby/images/throbber.gif) no-repeat 0px -18px; width: 16px; }
+.ajax-progress .throbber { background: transparent url(../images/throbber.gif) no-repeat 0px -18px; width: 16px; }
 
 /* Animated throbber */
 html.js input.form-autocomplete {
-	background-image: url(/sites/all/themes/iby/images/throbber.gif);
+	background-image: url(../images/throbber.gif);
 	border: 1px solid #666;
 }
 
@@ -2193,9 +2193,9 @@ body.not-logged-in .footerEndWrapper ul li.footer_menu_first{padding-left:0px;}
 }
 
 /* And here we simple add the bottom of the footer... */
-#page-bottom-footer { margin: auto; width: 857px; padding-bottom: 25px; height: 5px; background: transparent url(/sites/all/themes/iby/images/content_bg_bottom.png) left top no-repeat; }
+#page-bottom-footer { margin: auto; width: 857px; padding-bottom: 25px; height: 5px; background: transparent url(../images/content_bg_bottom.png) left top no-repeat; }
 
-.footerEnd.narrow-footer { width: 855px; float: none; padding: 0; margin: auto; background: transparent url(/sites/all/themes/iby/images/content_bg.png) left top repeat-y; }
+.footerEnd.narrow-footer { width: 855px; float: none; padding: 0; margin: auto; background: transparent url(../images/content_bg.png) left top repeat-y; }
 .footerEnd.narrow-footer .footerEndWrapper { width: 829px; margin: auto; }
 .footerEnd.narrow-footer .footerEndWrapper .poweredBy { margin-right: 20px; }
 .footerEnd.narrow-footer .footerEndWrapper ul { margin-left: 20px; }

@@ -8,15 +8,15 @@
 
 #recent-list, #recent-list a { font-size: 10px; }
 #recent-list th { text-align: left; padding: 3px; }
-#recent-list th.sortable a { padding-right: 10px; font-weight: normal; background: transparent url(/sites/all/themes/iby/images/sort_none.png) right 3px no-repeat; }
-#recent-list th.sortable a:hover { background-image: url(/sites/all/themes/iby/images/sort_asc.png); }
+#recent-list th.sortable a { padding-right: 10px; font-weight: normal; background: transparent url(../images/sort_none.png) right 3px no-repeat; }
+#recent-list th.sortable a:hover { background-image: url(../images/sort_asc.png); }
 #recent-list th.orderby a { font-weight: bold; text-decoration: underline; }
-#recent-list th.sortable.desc a { background-image: url(/sites/all/themes/iby/images/sort_desc.png); }
-#recent-list th.sortable.desc a:hover { background-image: url(/sites/all/themes/iby/images/sort_asc.png); }
-#recent-list th.sortable.asc a { background-image: url(/sites/all/themes/iby/images/sort_asc.png); }
-#recent-list th.sortable.asc a:hover { background-image: url(/sites/all/themes/iby/images/sort_desc.png); }
+#recent-list th.sortable.desc a { background-image: url(../images/sort_desc.png); }
+#recent-list th.sortable.desc a:hover { background-image: url(../images/sort_asc.png); }
+#recent-list th.sortable.asc a { background-image: url(../images/sort_asc.png); }
+#recent-list th.sortable.asc a:hover { background-image: url(../images/sort_desc.png); }
 
-#recent-list th.sortable.marked.orderby a { background-image: url(/sites/all/themes/iby/images/sort_asc.png); }
+#recent-list th.sortable.marked.orderby a { background-image: url(../images/sort_asc.png); }
 
 #mark_all_read { color: #00B0CA; margin-left: 3px; text-decoration: none; font-size: 10px; font-weight: bold; }
 
@@ -44,7 +44,7 @@
 */
 
 
-#recent-list td.marked a { display: block; float: left; width: 15px; height: 15px; background: transparent url(/sites/all/themes/iby/images/stars.png) left top no-repeat; }
+#recent-list td.marked a { display: block; float: left; width: 15px; height: 15px; background: transparent url(../images/stars.png) left top no-repeat; }
 /*
 #recent-list td.marked.active a { background-position: left -15px; }
 #recent-list td.marked a:hover { background-position: left -15px; }
