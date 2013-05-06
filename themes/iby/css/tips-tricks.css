@@ -1,5 +1,5 @@
 /* Tips & Trick forums */
-.tips-tricks-large-box { width: 755px; min-height: 281px; padding-top:1px; margin-bottom: 10px; background: #F8F6F1 url(/sites/all/themes/iby/images/tips_tricks_bg.png) right bottom no-repeat; }
+.tips-tricks-large-box { width: 755px; min-height: 281px; padding-top:1px; margin-bottom: 10px; background: #F8F6F1 url(../images/tips_tricks_bg.png) right bottom no-repeat; }
 .tips-tricks-large-box h2 { color: #00B0CA; font-size: 25px; padding: 0px; margin-bottom:10px; padding-top: 0px; padding-left: 23px; margin-top: 8px;}
 .tips-tricks-top-divider { border-top: 1px dotted #666; width: 700px; height: 1px; margin: 0px; padding: 0; margin-left: 23px; }
 .tips-tricks-texts {overflow:hidden;  }
@@ -36,15 +36,15 @@
 
 /* List view for topics */
 .tips-tricks-list { height: 280px; float: left; margin-right: 6px; margin-bottom: 10px; width: 555px;}
-.tips-tricks-list.type-all { background: #F9F7F2 url(/sites/all/themes/iby/images/type_bg_all.png) center top no-repeat; }
-.tips-tricks-list.type-continence { background: #F9F7F2 url(/sites/all/themes/iby/images/type_bg_green.png) left top no-repeat; }
-.tips-tricks-list.type-ostomy { background: #F9F7F2 url(/sites/all/themes/iby/images/type_bg_blue.png) left top no-repeat; }
+.tips-tricks-list.type-all { background: #F9F7F2 url(../images/type_bg_all.png) center top no-repeat; }
+.tips-tricks-list.type-continence { background: #F9F7F2 url(../images/type_bg_green.png) left top no-repeat; }
+.tips-tricks-list.type-ostomy { background: #F9F7F2 url(../images/type_bg_blue.png) left top no-repeat; }
 .tips-tricks-list .tips-tricks-bg { height: 275px; }
 .tips-tricks-list .forum-headline { margin-top: 5px; padding: 10px; background-color: #fff; font-size: 11px; color: #666; font-weight: bold; line-height: 18px; }
 .tips-tricks-list .forum-headline a { color: #00b0ca; font-weight: bold; font-size: 16px; text-decoration: none; }
-.tips-tricks-list a.tips-tricks-add { background: transparent url(/sites/all/themes/iby/images/add_plus.png) left 3px no-repeat; display: block; width: 110px; float: right; padding-left: 19px; color: #00b0ca; font-weight: bold; font-size: 14px; text-decoration: none; margin-left: 40px; }
+.tips-tricks-list a.tips-tricks-add { background: transparent url(../images/add_plus.png) left 3px no-repeat; display: block; width: 110px; float: right; padding-left: 19px; color: #00b0ca; font-weight: bold; font-size: 14px; text-decoration: none; margin-left: 40px; }
 .tips-tricks-list .tips-tricks-action-box { width: 170px; height: 35px; margin-left: 20px; margin-bottom: 10px; float: right; font-size: 11px; color: #666; font-weight: bold; line-height: 18px;}
-.tips-tricks-list a.tips-tricks-useful { background: transparent url(/sites/all/themes/iby/images/useful_heart.png) left 3px no-repeat; display: block; padding-left: 19px; color: #00b0ca; font-weight: bold; font-size: 14px; text-decoration: none; height: 20px; width: 200px; }
+.tips-tricks-list a.tips-tricks-useful { background: transparent url(../images/useful_heart.png) left 3px no-repeat; display: block; padding-left: 19px; color: #00b0ca; font-weight: bold; font-size: 14px; text-decoration: none; height: 20px; width: 200px; }
 .tips-tricks-list .tips-tricks-description { overflow: hidden; margin: 10px; height: 113px; text-decoration: none; color: #666; font-size: 12px; width: 535px; }
 .tips-tricks-list .tips-tricks-description h2.solution-label { margin: 0; margin-bottom: 2px; width: 100px;  padding: 0; color: #00b0ca; font-weight: bold; font-size: 16px; text-decoration: none; }
 .tips-tricks-list .tips-tricks-tags { color: #666; font-size: 11px; margin-left: 10px; margin-top: 10px; height: 35px; font-weight: bold; }
@@ -53,9 +53,9 @@
 
 /* Grid view for topics */
 .tips-tricks-grid { width: 180px; height: 250px; float: left; margin-right: 6px; margin-bottom: 10px; }
-.tips-tricks-grid.type-all { background: #F9F7F2 url(/sites/all/themes/iby/images/type_bg_all.png) center top no-repeat; }
-.tips-tricks-grid.type-continence { background: #F9F7F2 url(/sites/all/themes/iby/images/type_bg_green.png) left top no-repeat; }
-.tips-tricks-grid.type-ostomy { background: #F9F7F2 url(/sites/all/themes/iby/images/type_bg_blue.png) left top no-repeat; }
+.tips-tricks-grid.type-all { background: #F9F7F2 url(../images/type_bg_all.png) center top no-repeat; }
+.tips-tricks-grid.type-continence { background: #F9F7F2 url(../images/type_bg_green.png) left top no-repeat; }
+.tips-tricks-grid.type-ostomy { background: #F9F7F2 url(../images/type_bg_blue.png) left top no-repeat; }
 .tips-tricks-grid .tips-tricks-bg { height: 245px; margin-top: 5px; }
 .tips-tricks-grid .forum-headline { color: #666; font-size: 11px; font-weight: bold; height: 60px; padding: 10px; background-color: #fff; }
 .tips-tricks-grid .forum-headline a { display: block; height: 37px; color: #00b0ca; font-weight: bold; font-size: 15px; text-decoration: none; }

@@ -1,8 +1,8 @@
 /* VIP Rooms */
 .vip-rooms-forum { width: 180px; height: 212px; float: left; margin-right: 6px; margin-bottom: 10px; }
-.vip-rooms-forum.type-all { background: #f9f7f2 url(/sites/all/themes/iby/images/type_bg_all.png) center top no-repeat; }
-.vip-rooms-forum.type-continence { background: #f9f7f2 url(/sites/all/themes/iby/images/type_bg_green.png) left top no-repeat; }
-.vip-rooms-forum.type-ostomy { background: #f9f7f2 url(/sites/all/themes/iby/images/type_bg_blue.png) left top no-repeat; }
+.vip-rooms-forum.type-all { background: #f9f7f2 url(../images/type_bg_all.png) center top no-repeat; }
+.vip-rooms-forum.type-continence { background: #f9f7f2 url(../images/type_bg_green.png) left top no-repeat; }
+.vip-rooms-forum.type-ostomy { background: #f9f7f2 url(../images/type_bg_blue.png) left top no-repeat; }
 .vip-rooms-bg { height: 207px; }
 .vip-rooms-forum .forum-headline { margin-top: 5px; padding: 10px; background-color: #fff; height: 35px; }
 .vip-rooms-forum .forum-headline a { color: #00b0ca; font-weight: bold; font-size: 14px; text-decoration: none; }
@@ -15,7 +15,7 @@
 
 .vip-rooms-forum .vip-rooms-assigned { font-weight:bold; font-size:11px; color:#666; margin: 10px; margin-bottom: 15px; }
 
-.vip-rooms-large-box { width: 755px; height: 281px; background:#F8F6F1 url(/sites/all/themes/iby/images/vip_rooms_bg.png) right bottom no-repeat; padding-top:1px; margin-bottom: 10px;}
+.vip-rooms-large-box { width: 755px; height: 281px; background:#F8F6F1 url(../images/vip_rooms_bg.png) right bottom no-repeat; padding-top:1px; margin-bottom: 10px;}
 .vip-rooms-large-box h2 { margin-top: 8px; color: #00B0CA; font-size: 25px; padding: 0px; margin-bottom:10px; padding-top: 0px; padding-left: 23px; }
 .vip-rooms-top-divider { border-top: 1px dotted #666; width: 700px; height: 1px; maring: 0px; padding: 0; margin-left: 23px; }
 .vip-rooms-texts {  }
@@ -23,9 +23,9 @@
 .vip-rooms-texts-right { float: left; margin: 25px; margin-top: 20px; width: 300px; color: #666; }
 
 .vip-rooms-type-all, .vip-rooms-type-continence, .vip-rooms-type-ostomy { float: left; height: 28px; font-size: 13px; color: #666; margin-left: 15px; padding-top: 5px; text-align: center; }
-.vip-rooms-type-all { width: 60px; background: transparent url(/sites/all/themes/iby/images/type_tab_all.png) left top no-repeat; }
-.vip-rooms-type-continence { color: #999; width: 100px; background: transparent url(/sites/all/themes/iby/images/type_tab_continence.png) left -33px no-repeat; }
-.vip-rooms-type-ostomy {     color: #999; width: 100px; background: transparent url(/sites/all/themes/iby/images/type_tab_ostomy.png) left -33px no-repeat; }
+.vip-rooms-type-all { width: 60px; background: transparent url(../images/type_tab_all.png) left top no-repeat; }
+.vip-rooms-type-continence { color: #999; width: 100px; background: transparent url(../images/type_tab_continence.png) left -33px no-repeat; }
+.vip-rooms-type-ostomy {     color: #999; width: 100px; background: transparent url(../images/type_tab_ostomy.png) left -33px no-repeat; }
 
 
 .vip-rooms-archived { float: left; width: 570px; height: 60px; margin-bottom: 10px; padding-top: 11px; border-top: 1px dotted #666; }
@@ -56,12 +56,12 @@
 
 body.page-forum-files td { padding-left: 24px; }
 
-body.page-forum-files th a { color: #666; padding-left: 13px; background: transparent url(/sites/all/themes/iby/images/asc_icon.png) 0px 5px no-repeat; }
+body.page-forum-files th a { color: #666; padding-left: 13px; background: transparent url(../images/asc_icon.png) 0px 5px no-repeat; }
 body.page-forum-files th a.active { color: #00b0ca; }
-body.page-forum-files th a.active.asc:hover { background-image: url(/sites/all/themes/iby/images/desc_icon.png); }
-body.page-forum-files th a.desc { background-image: url(/sites/all/themes/iby/images/desc_icon.png); }
-body.page-forum-files th a.active.desc:hover { background-image: url(/sites/all/themes/iby/images/asc_icon.png); }
+body.page-forum-files th a.active.asc:hover { background-image: url(../images/desc_icon.png); }
+body.page-forum-files th a.desc { background-image: url(../images/desc_icon.png); }
+body.page-forum-files th a.active.desc:hover { background-image: url(../images/asc_icon.png); }
 
-a.download-link { background: url(/sites/all/themes/iby/images/download_icon.png) left 11px no-repeat; }
+a.download-link { background: url(../images/download_icon.png) left 11px no-repeat; }
 
 .odd-color { background-color: #fafafa; }
