@@ -582,7 +582,21 @@ function iby_forum_page($forum = NULL) {
   if(!isset($forum)) { /* default is to show all forums - we show none... */ }
 
   $theme_name = "ibyforums";
-  $variables = array('forums' => $forum->forums, 'topics' => '', 'parents' => $forum->parents, 'tid' => $forum->tid, 'forums_per_page' => 10);
+
+  // Hack to eliminate Notice:
+  // Undefined property: stdClass::$last_post in template_preprocess_forum_list()
+  // (line 1147 of /var/www/ibytopeytz/modules/forum/forum.module).
+  foreach($forum->forums as $forum_id => $forum_item) {
+    $forum->forums[$forum_id]->last_post = '';
+  }
+
+  $variables = array(
+    'forums' => $forum->forums,
+    'topics' => '',
+    'parents' => $forum->parents,
+    'tid' => $forum->tid,
+    'forums_per_page' => 10
+  );
 
   if(empty($forum->container)) {
     $variables['topics'] = iby_forums_get_topics($forum->tid, 1, 25);
