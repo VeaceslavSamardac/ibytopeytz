@@ -31,12 +31,14 @@ else $font_step = 0;
 
 <div style="clear:both;"></div>
 
+<?php /* ?>
 <div id="tags_search" style="float:right;height:0px;overflow:hidden;">
 <?php
 $search_form = drupal_get_form('forum_tags_search_form', NULL);
 echo render($search_form);
 ?>
 </div>
+<?php */ ?>
 
 <div style="clear:both;"></div>
 
