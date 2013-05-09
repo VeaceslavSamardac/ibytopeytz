@@ -603,10 +603,8 @@ function iby_forum_page($forum = NULL) {
     $parents_count = count($forum->parents);
     $parents_count--;
     $parent = $forum->parents[$parents_count];
-
     $call_name = StringTools::slug($parent->name, "__");
     $real_name = StringTools::slug($parent->name, "--");
-
   } else {
     $call_name = StringTools::slug($forum->name, "__");
     $real_name = StringTools::slug($forum->name, "--");
@@ -1072,7 +1070,6 @@ function iby_forums_get_nodes_filter_tags($forum_tid) {
       $query->condition('tags.tid', $forum_tid);
     }
 
-
     // We only want to show nodes with comments - that is: show problems with a solution
     $tips_tricks_tid = _iby_forums_get_tid_from_name("Tips & Tricks", 2);
     if($tips_tricks_tid == $forum_tid)
@@ -1095,7 +1092,6 @@ function iby_forums_get_nodes_filter_tags($forum_tid) {
       //  }
       //}
 
-
       $i = 1;
       foreach($_tags_tids as $tags_tid) {
         $query->join('iby_forum_tags_cache', 'tc'.$i, 'tc'.$i.'.nid = tags.nid AND tc'.$i.'.field_tags_tid='.$tags_tid);
@@ -1105,6 +1101,7 @@ function iby_forums_get_nodes_filter_tags($forum_tid) {
 
     $res = $query->execute();
 
+    $query_cache['nids'] = array();
     if($res) {
       foreach($res as $row) {
         if (!isset($tags_tids[$row->field_tags_tid])) {
@@ -1116,6 +1113,7 @@ function iby_forums_get_nodes_filter_tags($forum_tid) {
         }
       }
     }
+
   }
 
   //arsort($tags_tids, SORT_NUMERIC);
