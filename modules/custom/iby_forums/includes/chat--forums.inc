@@ -80,7 +80,7 @@ function iby_forums_preprocess_chat__forums__forums(&$variables) {
     $query->orderBy('fdfsg.field_sticky_global_value', 'DESC');
   } else {
     $query->join('field_data_field_sticky', 'fdfs', 'fdfs.entity_id = f.nid');
-    $query->addFfield('fdfs', 'field_sticky_value', 'sticky');
+    $query->addField('fdfs', 'field_sticky_value', 'sticky');
     $query->orderBy('fdfs.field_sticky_value', 'DESC');
   }
 
