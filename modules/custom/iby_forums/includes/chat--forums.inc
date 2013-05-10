@@ -5,6 +5,8 @@
 function iby_forums_preprocess_chat__forums__forums(&$variables) {
   $query_cache = &drupal_static('iby_forum_tagging', array());
 
+  $vars = $variables;
+
   global $user;
 
   // O.k... So this is where i need to do the magic....
@@ -82,14 +84,16 @@ function iby_forums_preprocess_chat__forums__forums(&$variables) {
     $query->orderBy('fdfs.field_sticky_value', 'DESC');
   }
 
-  if(isset($query_cache['tids'])) $tids = array_intersect($tids, $query_cache['tids']);
+  if(isset($query_cache['tids'])) {
+    $tids = array_intersect($tids, $query_cache['tids']);
+  }
 
   if(count($tids)) {
     $query->condition('f.tid', $tids, "IN");
 
-    if(isset($query_cache['nids']) && count($query_cache['nids']))
+    if(isset($query_cache['nids']) && count($query_cache['nids'])) {
       $query->condition('f.nid', $query_cache['nids'], 'IN');
-    
+    }
 
     if(isset($query_cache['o'])) {
       switch($query_cache['o']) {
@@ -113,7 +117,6 @@ function iby_forums_preprocess_chat__forums__forums(&$variables) {
       $query->orderBy('f.nid', 'DESC');
     }
 
-
     if(isset($_GET['view']) && ($_GET['view'] == 'list')) {
       $query->limit(10);
     } elseif(isset($_GET['view']) && ($_GET['view'] == 'grid')) {
@@ -136,13 +139,19 @@ function iby_forums_preprocess_chat__forums__forums(&$variables) {
 
     $variables['topics'] = entity_load('node', $nids);
 
-    foreach($variables['topics'] as $index=>$topic) $variables['topics'][$index]->owner_uid = $topic->uid;
+    foreach($variables['topics'] as $index=>$topic) {
+      $variables['topics'][$index]->owner_uid = $topic->uid;
+    }
 
-    //echo "<pre>";var_dump($variables['topics']);exit;
+    foreach($vars['topics'] as $topic) {
+      if (isset($variables['topics'][$topic->nid])) {
+        $merged = (object)array_merge((array)$variables['topics'][$topic->nid], (array)$topic);
+        $variables['topics'][$topic->nid] = $merged;
+      }
+    }
+
   }
 
-//  echo "<pre>";var_dump($variables['topics']);exit;
-//
 //  if($nids) {
 //    $query = db_select('node', 'n');//->extend('TableSort');
 //    $query->fields('n', array('title', 'nid', 'type', 'sticky', 'created', 'uid'));
