@@ -934,7 +934,6 @@ function iby_forum_forum_load($tid = NULL) {
   return $forum_term;
 }
 
-
 function iby_forums_get_filter_tags($forum_tid) {
   return iby_forums_get_forums_filter_tags($forum_tid);
 }
@@ -1059,7 +1058,7 @@ function iby_forums_get_nodes_filter_tags($forum_tid) {
     $query->fields('tags');//, array('field_tags_tid'));
 
     $forum = taxonomy_term_load($forum_tid);
-    if($forum->container) {
+    if(isset($forum->container) && $forum->container) {
       $in_query = db_select('taxonomy_term_hierarchy', 'th');
       $in_query->fields('th', array('tid'));
       $in_query->condition('th.parent', $forum_tid);
