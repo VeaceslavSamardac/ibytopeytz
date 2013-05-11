@@ -133,7 +133,8 @@ echo drupal_render(node_add('forum'));
 
   <div id="<?php echo $parent_slug;?>-front-right">
 <?php
-  echo theme($parent_call_name.'__front__right', $variables + array('forum' => (object)$taxonomy_forums[0]['taxonomy_term']));
+  //echo theme($parent_call_name.'__front__right', $variables + array('forum' => (object)$taxonomy_forums[0]['taxonomy_term']));
+  echo theme($parent_call_name.'__front__right', $variables);
 ?>
     <div style="clear:both;"></div>
 
