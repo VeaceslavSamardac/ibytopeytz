@@ -87,7 +87,13 @@ if(count($sorted_entities)):
       <div class="account-info">
         <div><a href="/user/<?php echo $account->uid;?>"><?php echo $account->name;?></a></div>
         <div><?php echo date("d M - h:i a", $entity->created);?></div>
-        <div class="node_body"><a href="/node/<?php echo $related_node->nid;?>"><?php echo nl2br(StringTools::shorten(StringTools::striptags($related_node->body_value), 100));?></a></div>
+<?php /*
+        <div class="node_body">
+          <a href="/node/<?php echo $related_node->nid;?>">
+            <?php echo nl2br(StringTools::shorten(StringTools::striptags($related_node->body_value), 100));?>
+          </a>
+        </div>
+*/ ?>
       </div>
 
       <div class="entity-info" style="font-size:11px;color:#666;text-decoration:none;">
