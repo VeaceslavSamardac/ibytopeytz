@@ -143,10 +143,12 @@ function iby_forums_preprocess_chat__forums__forums(&$variables) {
       $variables['topics'][$index]->owner_uid = $topic->uid;
     }
 
-    foreach($vars['topics'] as $topic) {
-      if (isset($variables['topics'][$topic->nid])) {
-        $merged = (object)array_merge((array)$variables['topics'][$topic->nid], (array)$topic);
-        $variables['topics'][$topic->nid] = $merged;
+    if (isset($vars['topics']) && !empty($vars['topics'])) {
+      foreach($vars['topics'] as $topic) {
+        if (isset($variables['topics'][$topic->nid])) {
+          $merged = (object)array_merge((array)$variables['topics'][$topic->nid], (array)$topic);
+          $variables['topics'][$topic->nid] = $merged;
+        }
       }
     }
 
