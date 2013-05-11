@@ -113,7 +113,9 @@ if(isset($entity->comment_body)) {
 
   <div class="<?php echo $parent_slug;?>-divider divider"></div>
 
+<?php /*
 <!--  <a href="/node/<?php echo $nid;?>#tags_box" style="font-weight:bold;">Reset choices</a>-->
+*/ ?>
 
   <div style="clear:both;"></div>
 </div>
