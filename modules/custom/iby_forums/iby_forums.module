@@ -1004,8 +1004,24 @@ function iby_forums_get_forums_filter_tags($forum_tid) {
       foreach($res as $row) {
        if(!isset($tags_tids[$row->field_tags_tid])) $tags_tids[$row->field_tags_tid] = 0;
         $tags_tids[$row->field_tags_tid]++;
-        if($row->tid && (!is_array($query_cache['tids']) || !in_array($row->tid, $query_cache['tids']))) $query_cache['tids'][] = $row->tid;
-        if($row->nid && (!is_array($query_cache['nids']) || !in_array($row->nid, $query_cache['nids']))) $query_cache['nids'][] = $row->nid;
+        if (
+          $row->tid
+        &&
+          isset($query_cache['tids'])
+        &&
+          (!is_array($query_cache['tids']) || !in_array($row->tid, $query_cache['tids']))
+        ) {
+          $query_cache['tids'][] = $row->tid;
+        }
+        if (
+          $row->nid
+        &&
+          isset($query_cache['nids'])
+        &&
+          (!is_array($query_cache['nids']) || !in_array($row->nid, $query_cache['nids']))
+        ) {
+          $query_cache['nids'][] = $row->nid;
+        }
       }
     }
   }
