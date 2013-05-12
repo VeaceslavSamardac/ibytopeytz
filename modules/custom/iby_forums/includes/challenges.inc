@@ -2,9 +2,10 @@
 /**
  * Process variables for challenges--forums.tpl.php
  */
-
 function iby_forums_preprocess_challenges__forums(&$variables) {
   $query_cache = &drupal_static('iby_forum_tagging', array());
+
+  $vars = $variables;
 
   global $user;
 
@@ -196,14 +197,21 @@ function iby_forums_preprocess_challenges__forums(&$variables) {
       $nids[] = $record->nid;
     }
     
-    //echo "<pre>"; var_dump($nids); exit;
-
     $variables['topics'] = entity_load('node', $nids);
 
-    foreach($variables['topics'] as $index=>$topic) $variables['topics'][$index]->owner_uid = $topic->uid;
+    foreach($variables['topics'] as $index=>$topic) {
+      $variables['topics'][$index]->owner_uid = $topic->uid;
+    }
 
-    //echo "<pre>";var_dump($variables['topics']);exit;
-    //}
+    if (isset($vars['topics']) && !empty($vars['topics'])) {
+      foreach($vars['topics'] as $topic) {
+        if (isset($variables['topics'][$topic->nid])) {
+          $merged = (object)array_merge((array)$variables['topics'][$topic->nid], (array)$topic);
+          $variables['topics'][$topic->nid] = $merged;
+        }
+      }
+    }
+
   }
 
 
