@@ -7,7 +7,9 @@ $max_font = 21;
 $min_font = 12;
 $font_diff = ($max_font - $min_font);
 
-if($tags->info['diff']) $font_step = ($font_diff / $tags->info['diff']);
+if(isset($tags->info['diff']) && $tags->info['diff']) {
+  $font_step = ($font_diff / $tags->info['diff']);
+}
 else $font_step = 0;
 
 ?>
