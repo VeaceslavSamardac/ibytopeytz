@@ -158,47 +158,41 @@ function iby_forums_form_taxonomy_form_term_alter(&$form, &$form_state, $form_id
     }
 
     switch($slug_name) {
-
-    case "challenges":
-      //unset($form['field_creator_uid']);
-      unset($form['field_tags']);
-      unset($form['field_vip_private']);
-      unset($form['field_vip_members']);
-      unset($form['field_vip_archived']);
-
-      $form['field_images']['#file_upload_title'] = t('Add images');
-      $form['name']['#title'] = t('Title');
-      $form['description']['#title'] = t('Description');
-      $form['description']['#description'] = t('max 2000 characters');
-
-      $form['description']['#maxlength'] = '2000';
-      $form['description']['#maxlength_js'] = true;
-
+      case "challenges":
+        //unset($form['field_creator_uid']);
+        unset($form['field_tags']);
+        unset($form['field_vip_private']);
+        unset($form['field_vip_members']);
+        unset($form['field_vip_archived']);
+        $form['field_images']['#file_upload_title'] = t('Add images');
+        $form['name']['#title'] = t('Title');
+        $form['description']['#title'] = t('Description');
+        $form['description']['#description'] = t('max 2000 characters');
+        $form['description']['#maxlength'] = '2000';
+        $form['description']['#maxlength_js'] = true;
       break;
-
-    case "chat_forums":
-      //unset($form['field_creator_uid']);
-      unset($form['field_enddate']);
-      unset($form['field_challenge_number']);
-      unset($form['field_tags']);
-      unset($form['field_vip_private']);
-      unset($form['field_vip_members']);
-      unset($form['field_vip_archived']);
-      $form['field_images']['#attributes']['class'][] = "hide-me";
-      $form['name']['#title'] = t('Title');
-      $form['description']['#title'] = t('Description');
+      case "chat_forums":
+        //unset($form['field_creator_uid']);
+        unset($form['field_enddate']);
+        unset($form['field_challenge_number']);
+        unset($form['field_tags']);
+        unset($form['field_vip_private']);
+        unset($form['field_vip_members']);
+        unset($form['field_vip_archived']);
+        $form['field_images']['#attributes']['class'][] = "hide-me";
+        $form['name']['#title'] = t('Title');
+        $form['description']['#title'] = t('Description');
       break;
-
-    case "vip_rooms":
-      //unset($form['field_creator_uid']);
-      unset($form['field_tags']);
-      unset($form['field_enddate']);
-      unset($form['field_challenge_number']);
-      unset($form['field_vip_members']);
-      //unset($form['field_vip_archived']);
-      $form['field_images']['#attributes']['class'][] = "hide-me";
-      $form['name']['#title'] = t('Title');
-      $form['description']['#title'] = t('Description');
+      case "vip_rooms":
+        //unset($form['field_creator_uid']);
+        unset($form['field_tags']);
+        unset($form['field_enddate']);
+        unset($form['field_challenge_number']);
+        unset($form['field_vip_members']);
+        //unset($form['field_vip_archived']);
+        $form['field_images']['#attributes']['class'][] = "hide-me";
+        $form['name']['#title'] = t('Title');
+        $form['description']['#title'] = t('Description');
       break;
     }
 
@@ -236,37 +230,48 @@ function iby_forums_form_forum_node_form_alter(&$form, &$form_state, $form_id) {
   if(!$forum_id && (arg(0) == "node") && (arg(2) == "edit")) {
     $node_id = arg(1);
     $node = node_load($node_id);
-
     $forum_id = $node->taxonomy_forums[$langs[0]][0]['tid'];
   }
 
   $parent_tid = _iby_forums_get_parent_tid($forum_id);
-
   $forum_type = taxonomy_term_load($parent_tid);
-  $slug_name = StringTools::slug($forum_type->name);
-  $slug_perm_name = StringTools::slug($forum_type->name, " ");
 
-  switch($slug_name) {
-  case "tips_tricks":
-    $form['#action'] = $form['#action']."#tips_tricks_form";
-    unset($form['field_sticky']);
-    $form['field_sticky']['und']['#title'] = "Featured";
-    unset($form['field_sticky_global']);
-    $form['field_files']['#attributes']['class'][] = "hide-me";
-    $form['field_tags']['und']['#required'] = true;
-
-    break;
-  case "chat_forums":
-    if(!sqtools_is_admin($user) && !_iby_forums_check_access(false, false, "forum", "edit", false, $forum_id)) {
-      unset($form['field_sticky']);
-      unset($form['field_sticky_global']);
+  if ($forum_type) {
+    $slug_name = StringTools::slug($forum_type->name);
+    $slug_perm_name = StringTools::slug($forum_type->name, " ");
+    switch($slug_name) {
+      case "tips_tricks":
+        $form['#action'] = $form['#action']."#tips_tricks_form";
+        unset($form['field_sticky']);
+        $form['field_sticky']['und']['#title'] = "Featured";
+        unset($form['field_sticky_global']);
+        $form['field_files']['#attributes']['class'][] = "hide-me";
+        $form['field_tags']['und']['#required'] = true;
+      break;
+      case "chat_forums":
+        if(!sqtools_is_admin($user) && !_iby_forums_check_access(false, false, "forum", "edit", false, $forum_id)) {
+          unset($form['field_sticky']);
+          unset($form['field_sticky_global']);
+        }
+      break;
+      default:
+        unset($form['field_sticky']);
+        unset($form['field_sticky_global']);
+        unset($form['field_type']);
+      break;
     }
-    break;
-  default:
-    unset($form['field_sticky']);
-    unset($form['field_sticky_global']);
-    unset($form['field_type']);
-    break;
+
+    $query = db_select('taxonomy_term_hierarchy', 'th');
+    $query->fields('th', array('tid'));
+    $query->condition('th.parent', $forum_type->tid);
+    $tids = array();
+    $res = $query->execute();
+    if($res) {
+      foreach($res as $row) {
+        $tids[] = $row->tid;
+      }
+    }
+    $tids[] = $forum_type->tid;
   }
 
   $form['title']['#title'] = "Heading";
@@ -279,19 +284,6 @@ function iby_forums_form_forum_node_form_alter(&$form, &$form_state, $form_id) {
   $tax_lang = $form['taxonomy_forums']['#language'];
   $tax_options = $form['taxonomy_forums'][$tax_lang]['#options'];
 
-  $query = db_select('taxonomy_term_hierarchy', 'th');
-  $query->fields('th', array('tid'));
-  $query->condition('th.parent', $forum_type->tid);
-
-  $tids = array();
-  $res = $query->execute();
-  if($res) {
-    foreach($res as $row) {
-      $tids[] = $row->tid;
-    }
-  }
-  $tids[] = $forum_type->tid;
-
   unset($form['additional_settings']);
   unset($form['revision_information']);
   unset($form['options']);
@@ -302,10 +294,11 @@ function iby_forums_form_forum_node_form_alter(&$form, &$form_state, $form_id) {
 
   //$form['#action'] = '/node/add/forum/'.$forum_id.'?inline=1';
   //unset($form['actions']['preview']);
-  $form['actions']['submit']['#ajax'] = array('callback' => 'iby_forums_forum_node_form_submit',
-                                              'wrapper' => 'forum-node-form',
-                                              'name' => 'submit1',
-                                              );
+  $form['actions']['submit']['#ajax'] = array(
+    'callback' => 'iby_forums_forum_node_form_submit',
+    'wrapper' => 'forum-node-form',
+    'name' => 'submit1',
+  );
   $form['actions']['cancel'] = array('#type' => 'button', '#value' => 'Cancel', '#attributes' => array('onclick' => 'location.reload(); return false;'), '#weight' => 3);
   $form['actions']['submit']['#weight'] = 1;
   $form['actions']['submit']['#value'] = "Submit";
@@ -335,16 +328,18 @@ function iby_forums_form_comment_node_forum_form_alter(&$form, &$form_state, $fo
   $parent_tid = _iby_forums_get_parent_tid($forum_id);
 
   $forum_type = taxonomy_term_load($parent_tid);
-  $slug_name = StringTools::slug($forum_type->name);
-  $slug_perm_name = StringTools::slug($forum_type->name, " ");
-
-  switch($slug_name) {
-  case "tips_tricks":
-    $form['field_files']['#attributes']['class'][] = "hide-me";
-    break;
-  case "challenges":
-  case "chat_forums":
-  case "vip_rooms":
+  if ($forum_type) {
+    $slug_name = StringTools::slug($forum_type->name);
+    $slug_perm_name = StringTools::slug($forum_type->name, " ");
+    switch($slug_name) {
+      case "tips_tricks":
+        $form['field_files']['#attributes']['class'][] = "hide-me";
+      break;
+      case "challenges":
+      case "chat_forums":
+      case "vip_rooms":
+      break;
+    }
   }
 
   if(arg(2) == "edit") {
