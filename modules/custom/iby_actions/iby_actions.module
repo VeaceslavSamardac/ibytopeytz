@@ -322,8 +322,11 @@ function _iby_actions_chat_forums_triggers_handler($type, &$object) {
   }
 
   $flags = sq_flags_api_get_multiple($flags_args);
-
-  foreach($flags as $flag) $account_uids[] = $flag->uid;
+  if (isset($flags) && !empty($flags)) {
+    foreach($flags as $flag) {
+      $account_uids[] = $flag->uid;
+    }
+  }
   
   if(count($aids)) {
     foreach($aids as $aid) {
