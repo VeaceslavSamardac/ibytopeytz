@@ -106,8 +106,9 @@ function iby_forums_form_taxonomy_form_term_alter(&$form, &$form_state, $form_id
   unset($form['path']);
 
   $parent_tid = false;
-  if(isset($form['#term']) && is_array($form['#term']))
-    $parent_tid = $form['#term']['parent'][0];
+  if(is_array($form['#term']))
+    if(isset($form['#term']['parent'][0]))
+      $parent_tid = $form['#term']->parent[0];
 
   if(isset($form['relations']['parent']['#value']))
     $parent_tid = $form['relations']['parent']['#value'][0];
@@ -645,8 +646,8 @@ function iby_forums_init() {
 
   $include_tids = array();
   if($forum_tid) {
-    $forum_type = taxonomy_term_load($forum_tid);
-    $slug_name = StringTools::slug($forum_type->name);
+    //$forum_type = taxonomy_term_load($forum_tid);
+    //$slug_name = StringTools::slug($forum_type->name);
 
     $include_tids = array($forum_tid);
     if($container) {
