@@ -10,7 +10,9 @@ $font_diff = ($max_font - $min_font);
 if(isset($tags->info['diff']) && $tags->info['diff']) {
   $font_step = ($font_diff / $tags->info['diff']);
 }
-else $font_step = 0;
+else {
+  $font_step = 0;
+}
 
 ?>
 <a name="tags"></a>
