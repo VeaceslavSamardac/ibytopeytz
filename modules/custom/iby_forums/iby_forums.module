@@ -108,10 +108,11 @@ function iby_forums_form_taxonomy_form_term_alter(&$form, &$form_state, $form_id
   $parent_tid = false;
   if(is_array($form['#term']))
     if(isset($form['#term']['parent'][0]))
-      $parent_tid = $form['#term']->parent[0];
+      $parent_tid = $form['#term']['parent'][0];
 
-  if(isset($form['relations']['parent']['#value']))
-    $parent_tid = $form['relations']['parent']['#value'][0];
+  if(isset($form['relations']) && is_array($form['relations']['parent']))
+    if(isset($form['relations']['parent']['#value']))
+      $parent_tid = $form['relations']['parent']['#value'][0];
 
   if(isset($form['relations']['parent']['#default_value']))
     $parent_tid = $form['relations']['parent']['#default_value'][0];
