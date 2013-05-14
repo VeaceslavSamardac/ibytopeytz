@@ -305,8 +305,6 @@ projects[wysiwyg][download][tag] = 7.x-2.2
 ; libraries
 
 libraries[tinymce][download][type] = "file"
-;libraries[tinymce][download][url] = "http://download.moxiecode.com/tinymce/3.5.8/tinymce_3.5.8.zip"
-;libraries[tinymce][download][url] = "http://www.tinymce.com/4.0b2/tinymce_4.0b2.zip"
 libraries[tinymce][download][url] = "https://github.com/downloads/tinymce/tinymce/tinymce_3.4.3.1.zip"
 libraries[tinymce][overwrite] = TRUE
 

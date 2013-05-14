@@ -147,7 +147,7 @@ function iby_forums_form_taxonomy_form_term_alter(&$form, &$form_state, $form_id
         }
       }
 
-      // This is now obsolete
+    // This is now obsolete
     //  if(!isset($form['field_allowed_roles']['und']['#default_value'])
     //     || !is_array($form['field_allowed_roles']['und']['#default_value'])
     //     || !count($form['field_allowed_roles']['und']['#default_value'])) {
@@ -197,12 +197,13 @@ function iby_forums_form_taxonomy_form_term_alter(&$form, &$form_state, $form_id
     }
 
   }
-  //$form['actions']['submit']['#ajax'] = array('callback' => 'iby_forums_forum_node_form_submit',
-  //                                            'wrapper' => 'forum-node-form',
-  //                                            'name' => 'submit1',
-  //                                            );
 
-  $form['actions']['cancel'] = array('#type' => 'button', '#value' => 'Cancel', '#attributes' => array('onclick' => 'location.reload(); return false;'), '#weight' => 3);
+  $form['actions']['cancel'] = array(
+    '#type' => 'button',
+    '#value' => 'Cancel',
+    '#attributes' => array('onclick' => 'location.reload(); return false;'),
+    '#weight' => 3
+  );
   $form['actions']['submit']['#weight'] = 1;
   $form['actions']['preview']['#weight'] = 2;
 
@@ -294,12 +295,21 @@ function iby_forums_form_forum_node_form_alter(&$form, &$form_state, $form_id) {
 
   //$form['#action'] = '/node/add/forum/'.$forum_id.'?inline=1';
   //unset($form['actions']['preview']);
-  $form['actions']['submit']['#ajax'] = array(
-    'callback' => 'iby_forums_forum_node_form_submit',
-    'wrapper' => 'forum-node-form',
-    'name' => 'submit1',
+
+// COMMENTED DUE UNNECESSARY, IN ADITION GENERATING AJAX ERROR
+//  $form['actions']['submit']['#ajax'] = array(
+//    'callback' => 'iby_forums_forum_node_form_submit',
+//    'wrapper' => 'forum-node-form',
+//    'name' => 'submit1',
+//  );
+
+  $form['actions']['cancel'] = array(
+    '#type' => 'button',
+    '#value' => 'Cancel',
+    '#attributes' => array('onclick' => 'location.reload(); return false;'),
+    '#weight' => 3
   );
-  $form['actions']['cancel'] = array('#type' => 'button', '#value' => 'Cancel', '#attributes' => array('onclick' => 'location.reload(); return false;'), '#weight' => 3);
+
   $form['actions']['submit']['#weight'] = 1;
   $form['actions']['submit']['#value'] = "Submit";
   $form['actions']['preview']['#weight'] = 2;
@@ -307,7 +317,9 @@ function iby_forums_form_forum_node_form_alter(&$form, &$form_state, $form_id) {
     unset($form['actions']['preview']['#attributes']['onclick']);
   }
   else {
-    $form['actions']['preview']['#attributes']['onclick'] = "jQuery('.node-form').each(function(){ this.setAttribute('action', '/node/add/forum/".$forum_id."?inline=1'); });";
+    $form['actions']['preview']['#attributes']['onclick'] = "
+      jQuery('.node-form').each(function(){ this.setAttribute('action', '/node/add/forum/".$forum_id."?inline=1'); });
+    ";
   }
 }
 
@@ -355,10 +367,13 @@ function iby_forums_form_comment_node_forum_form_alter(&$form, &$form_state, $fo
 
   $form['author']['#type'] = "hidden";
   //unset($form['author']);
-  $form['actions']['submit']['#ajax'] = array('callback' => 'iby_forums_form_comment_node_forum_form_submit',
-                                              'wrapper' => 'comment-form',
-                                              'name' => 'submit1',
-                                              );
+
+// COMMENTED DUE UNNECESSARY, IN ADITION GENERATING AJAX ERROR
+//  $form['actions']['submit']['#ajax'] = array(
+//    'callback' => 'iby_forums_form_comment_node_forum_form_submit',
+//    'wrapper' => 'comment-form',
+//    'name' => 'submit1',
+//  );
 
   $form['actions']['cancel'] = array('#type' => 'button', '#value' => 'Cancel', '#attributes' => array('onclick' => 'location.reload(); return false;'), '#weight' => 3);
   $form['actions']['submit']['#weight'] = 1;
@@ -367,19 +382,20 @@ function iby_forums_form_comment_node_forum_form_alter(&$form, &$form_state, $fo
   $form['actions']['submit']['#value'] = "Submit";
 }
 
-function iby_forums_forum_node_form_submit($form, &$form_state) {
-  if(isset($form_state['node']->nid) && $form_state['node']->nid) {
-    if(isset($form_state['confirm_delete']) && $form_state['confirm_delete']) {
-      return $form;
-    } else {
-      $commands = array();
-      $commands[] = ajax_command_invoke(NULL, 'goto_node', array($form_state['node']->nid));
-      $page = array('#type' => 'ajax', '#commands' => $commands);
-      ajax_deliver($page);
-    }
-
-  } else return $form;
-}
+// COMMENTED DUE UNNECESSARY, IN ADITION GENERATING AJAX ERROR
+// function iby_forums_forum_node_form_submit($form, &$form_state) {
+//   if(isset($form_state['node']->nid) && $form_state['node']->nid) {
+//     if(isset($form_state['confirm_delete']) && $form_state['confirm_delete']) {
+//       return $form;
+//     } else {
+//       $commands = array();
+//       $commands[] = ajax_command_invoke(NULL, 'goto_node', array($form_state['node']->nid));
+//       $page = array('#type' => 'ajax', '#commands' => $commands);
+//       ajax_deliver($page);
+//     }
+//
+//   } else return $form;
+// }
 
 function iby_forums_taxonomy_form_term_submit($form, &$form_state) {
   if(isset($form_state['term']->tid) && $form_state['term']->tid) {
@@ -390,19 +406,17 @@ function iby_forums_taxonomy_form_term_submit($form, &$form_state) {
   return $form;
 }
 
-function iby_forums_form_comment_node_forum_form_submit($form, &$form_state) {
-  $form['script']['#markup'] = '<script type="text/javascript">reinit_tinymce();</script>';
-
-  if(isset($form_state['comment']->cid) && $form_state['comment']->cid) {
-    $commands = array();
-
-    $page = comment_get_display_page($form_state['comment']->cid, 'forum');
-
-    $commands[] = ajax_command_invoke(NULL, 'goto_node', array($form_state['comment']->nid, $page));
-    $page = array('#type' => 'ajax', '#commands' => $commands);
-    ajax_deliver($page);
-  } else return $form;
-}
+// COMMENTED DUE UNNECESSARY, IN ADITION GENERATING AJAX ERROR
+// function iby_forums_form_comment_node_forum_form_submit($form, &$form_state) {
+//   $form['script']['#markup'] = '<script type="text/javascript">reinit_tinymce();</script>';
+//   if(isset($form_state['comment']->cid) && $form_state['comment']->cid) {
+//     $commands = array();
+//     $page = comment_get_display_page($form_state['comment']->cid, 'forum');
+//     $commands[] = ajax_command_invoke(NULL, 'goto_node', array($form_state['comment']->nid, $page));
+//     $page = array('#type' => 'ajax', '#commands' => $commands);
+//     ajax_deliver($page);
+//   } else return $form;
+// }
 
 /**
  * Menu callback; prints all members for a forum (not containers).
