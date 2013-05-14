@@ -222,7 +222,7 @@
         </span>
       </div>
       <?php
-        if($moderator_topic->field_tags['und'][0]['tid'] != 0) {
+        if (isset($moderator_topic->field_tags['und']) && $moderator_topic->field_tags['und'][0]['tid'] != 0) {
           $tid = $moderator_topic->field_tags['und'][0]['tid'];
         } else {
           $tid = 0;
@@ -401,20 +401,26 @@ if($newest_member->picture) { echo theme('image', array('path' => file_create_ur
 <div style="clear:both;"></div>
 </div> <!-- .community-info -->
 
-
 <div class="great-idea">
-<div class="dashboard-bottom-header">
-<h3>Got a great idea?</h3>
+  <div class="dashboard-bottom-header">
+    <h3>Got a great idea?</h3>
+  </div>
+  <img src="/<?php echo sqtools_default_theme_path(); ?>/images/balloons_multi.png" style="float:left;">
+    <p>Submit your idea about new activities or improvements of our community.</p>
+    <p>Product ideas are welcome as well, but they can also be posted in the Challenge section.</p>
+    <div class="rounded-button send-button">
+      <a href="/messages/new/role_9/<?php echo urlencode("I have an idea");?>">Submit idea</a>
+    </div>
+
+<?php /*
+<div class="rounded-button send-button">
+  <a href="/messages/new/role_3,role_8,role_9/<?php echo urlencode("I have an idea");?>?destination=node/<?php echo $nid;?>">
+    Submit idea
+  </a>
 </div>
-<img src="/<?php echo sqtools_default_theme_path(); ?>/images/balloons_multi.png" style="float:left;">
-<p>Submit your idea about new activities or improvements of our community.</p><p>Product ideas are welcome as well, but they can also be posted in the Challenge section.</p>
-<div class="rounded-button send-button"><a href="/messages/new/role_9/<?php echo urlencode("I have an idea");?>?destination=node/<?php echo $nid;?>">Submit idea</a></div>
-<?php
-/*
-   <div class="rounded-button send-button"><a href="/messages/new/role_3,role_8,role_9/<?php echo urlencode("I have an idea");?>?destination=node/<?php echo $nid;?>">Submit idea</a></div>
- */
-?>
-<div style="clear:both;"></div>
+*/ ?>
+
+  <div style="clear:both;"></div>
 </div> <!-- .great-idea -->
 
 <div style="clear:both;"></div>

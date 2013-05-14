@@ -146,8 +146,9 @@ $flag_class = (($is_flagged) ? 'sq-flags-active' : 'sq-flags-inactive');
 
       <div style="clear:both;"></div>
       <a href="javascript:void(0);" class="show-more-link" id="show-more-link<?php echo $forum->tid;?>"> </a>
+      <?php /*
       <!--<a href="javascript:void(0);" id="toggle_tid_<?php echo $forum->tid;?>" class="notice-show-hide<?php echo (($closed)?" button-show":"");?>"> </a>-->
-
+      */ ?>
       <div style="clear:both;"></div>
     </div>
 

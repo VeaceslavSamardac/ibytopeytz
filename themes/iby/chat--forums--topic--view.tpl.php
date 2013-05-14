@@ -1,6 +1,6 @@
 <?php
 sq_flags_api_set(array('flag_type' => "view", 'entity_type' => "taxonomy_term", 'entity_id' => $forum->tid));
-$bla = drupal_render(drupal_get_form('node_forum_form'));
+//$bla = drupal_render(drupal_get_form('node_forum_form'));
 ?>
 
 <div class="<?php echo $parent_slug;?>-large-box box-shadow">

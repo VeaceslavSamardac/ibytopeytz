@@ -211,6 +211,11 @@ projects[ckeditor][download][type] = git
 projects[ckeditor][download][url] = http://git.drupal.org/project/ckeditor.git
 projects[ckeditor][download][tag] = 7.x-1.13
 
+projects[config_perms][subdir] = "contrib"
+projects[config_perms][download][type] = git
+projects[config_perms][download][url] = http://git.drupal.org/project/config_perms.git
+projects[config_perms][download][tag] = 7.x-2.0
+
 projects[ctools][subdir] = "contrib"
 projects[ctools][download][type] = git
 projects[ctools][download][url] = http://git.drupal.org/project/ctools.git

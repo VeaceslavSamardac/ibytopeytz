@@ -6,7 +6,7 @@ $query->fields('n', array('created'));
 $query->condition('n.nid', $topic->nid);
 $node_created = $query->execute()->fetchField(0);
 ?>
-<div class="<?php echo $parent_slug;?> box-shadow <?php echo (($is_sticky) ? 'sticky ':'');?><?php echo $parent_slug;?>-topic-list ibyforum-topic-list" <?php echo (($first_in_row)?' style="margin-left:0px;"':'');?> id="<?php echo $parent_slug;?><?php echo $topic->nid;?>">
+<div class="<?php echo $parent_slug;?> box-shadow <?php echo (($is_sticky) ? 'sticky ':'');?><?php echo $parent_slug;?>-topic-list ibyforum-topic-list" id="<?php echo $parent_slug;?><?php echo $topic->nid;?>">
   <div class="<?php echo $parent_slug;?>-bg ibyforum-bg">
 
   <div class="<?php echo $parent_slug;?>-number ibyforum-number"><h2><?php echo StringTools::shorten(strip_tags($topic->title), 60, "...");?></h2></div>
