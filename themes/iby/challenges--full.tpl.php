@@ -204,10 +204,15 @@ if(isset($forum->field_images['und'])) {
       <div style="clear:both;"></div>
 
       <script type="text/javascript">
-            var scrollable = new Array();
-            scrollable[0] = jQuery(".fp-scrollable").scrollable({circular: true}).navigator().autoscroll();
+            // =================
+            // scrollable() and navigator() should be from jquery tools
+            // also once() was giving error at some point
+            // NEXT 2 LINES ARE NOT WORKING ON LIVE TOO, COMMENTED FOR NOW,
+            //var scrollable = new Array();
+            //scrollable[0] = jQuery(".fp-scrollable").scrollable({circular: true}).navigator().autoscroll();
+            // =================
             //jQuery(".fp-scrollable").scrollable({ circular: true }).click(function() {
-            //jQuery(this).data("scrollable").next();		
+            //  jQuery(this).data("scrollable").next();
             //});
       </script>
 
