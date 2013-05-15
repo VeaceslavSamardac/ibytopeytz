@@ -186,10 +186,10 @@ api = 2
 
 ; modules
 
-projects[acl][subdir] = "contrib"
-projects[acl][download][type] = git
-projects[acl][download][url] = http://git.drupal.org/project/acl.git
-projects[acl][download][tag] = 7.x-1.0
+; projects[acl][subdir] = "contrib"
+; projects[acl][download][type] = git
+; projects[acl][download][url] = http://git.drupal.org/project/acl.git
+; projects[acl][download][tag] = 7.x-1.0
 
 projects[apachesolr][subdir] = "contrib"
 projects[apachesolr][download][type] = git
@@ -241,10 +241,10 @@ projects[field_group][download][type] = git
 projects[field_group][download][url] = http://git.drupal.org/project/field_group.git
 projects[field_group][download][tag] = 7.x-1.1
 
-projects[forum_access][subdir] = "contrib"
-projects[forum_access][download][type] = git
-projects[forum_access][download][url] = http://git.drupal.org/project/forum_access.git
-projects[forum_access][download][tag] = 7.x-1.2
+; projects[forum_access][subdir] = "contrib"
+; projects[forum_access][download][type] = git
+; projects[forum_access][download][url] = http://git.drupal.org/project/forum_access.git
+; projects[forum_access][download][tag] = 7.x-1.2
 
 projects[google_analytics][subdir] = "contrib"
 projects[google_analytics][download][type] = git
@@ -281,15 +281,15 @@ projects[remember_me][download][type] = git
 projects[remember_me][download][url] = http://git.drupal.org/project/remember_me.git
 projects[remember_me][download][tag] = 7.x-1.0
 
-projects[save_draft][subdir] = "contrib"
-projects[save_draft][download][type] = git
-projects[save_draft][download][url] = http://git.drupal.org/project/save_draft.git
-projects[save_draft][download][tag] = 7.x-1.4
+; projects[save_draft][subdir] = "contrib"
+; projects[save_draft][download][type] = git
+; projects[save_draft][download][url] = http://git.drupal.org/project/save_draft.git
+; projects[save_draft][download][tag] = 7.x-1.4
 
-projects[votingapi][subdir] = "contrib"
-projects[votingapi][download][type] = git
-projects[votingapi][download][url] = http://git.drupal.org/project/votingapi.git
-projects[votingapi][download][tag] = 7.x-2.11
+; projects[votingapi][subdir] = "contrib"
+; projects[votingapi][download][type] = git
+; projects[votingapi][download][url] = http://git.drupal.org/project/votingapi.git
+; projects[votingapi][download][tag] = 7.x-2.11
 
 projects[webform][subdir] = "contrib"
 projects[webform][download][type] = git

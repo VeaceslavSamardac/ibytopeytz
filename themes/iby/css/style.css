@@ -331,13 +331,23 @@ display:block;
 
 table.privatemsg-list td.privatemsg-list-subject a{padding-left:0px;}
 
-.privatemsg-message-participants a.username, .privatemsg-author-name a.username{color:#0FA9C1;text-decoration:none;}
-.privatemsg-message-information{padding-bottom:5px;}
+
+
+.privatemsg-message-date { color:#C5C5C5; padding-right:1em; font-size:80%; }
+
+.privatemsg-author-name { font-size: 100%; padding-right: 1em; font-weight:normal; }
+.privatemsg-author-name a.username{color:#0FA9C1;text-decoration:none;}
+
+.privatemsg-message-participants a.username,
+
+.privatemsg-message-body { color:#666666; font-family:Arial; font-size:13px; overflow:visible; padding:0; }
 .privatemsg-message .privatemsg-message-body{margin-left:0px;}
 
 .privatemsg-message .privatemsg-author-avatar{padding-top:0px;}
 
 .privatemsg-message{margin-top:30px;}
+
+div.privatemsg-message-information { border-bottom: 1px dotted #C5C5C5; margin-bottom: 5px; padding-bottom:5px; width: 100%; }
 
 .privatemsg-message-information ul.privatemsg-message-actions li{float:right;}
 
