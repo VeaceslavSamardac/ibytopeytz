@@ -167,7 +167,7 @@ function _iby_actions_tips_tricks_triggers_handler($type, &$object) {
   $context['iby']['problem']['name'] = $node->title;
   $context['iby']['problem']['link'] = "http://".$_SERVER['SERVER_NAME'].'/node/'.$node->nid;
 
-  if($object->cid) {
+  if(isset($object->cid) && $object->cid) {
     $context['iby']['problem']['link'] .= "?page=".comment_get_display_page($object->cid, 'forum')."#comment-".$object->cid;
   }
 
@@ -221,7 +221,7 @@ function _iby_actions_challenges_triggers_handler($type, &$object) {
   $context['iby']['contribution']['name'] = $node->title;
   $context['iby']['contribution']['link'] = "http://".$_SERVER['SERVER_NAME'].'/node/'.$node->nid;
 
-  if($object->cid) {
+  if(isset($object->cid) && $object->cid) {
     $context['iby']['contribution']['link'] .= "?page=".comment_get_display_page($object->cid, $node->type)."#comment-".$object->cid;
   }
 
@@ -269,7 +269,7 @@ function _iby_actions_vip_rooms_triggers_handler($type, &$object) {
   $context['iby']['topic']['name'] = $node->title;
   $context['iby']['topic']['link'] = "http://".$_SERVER['SERVER_NAME'].'/node/'.$node->nid;
 
-  if($object->cid) {
+  if(isset($object->cid) && $object->cid) {
     $context['iby']['topic']['link'] .= "?page=".comment_get_display_page($object->cid, $node->type)."#comment-".$object->cid;
   }
 
@@ -317,13 +317,16 @@ function _iby_actions_chat_forums_triggers_handler($type, &$object) {
   $context['iby']['topic']['name'] = $node->title;
   $context['iby']['topic']['link'] = "http://".$_SERVER['SERVER_NAME'].'/node/'.$node->nid;
 
-  if($object->cid) {
+  if(isset($object->cid) && $object->cid) {
     $context['iby']['topic']['link'] .= "?page=".comment_get_display_page($object->cid, $node->type)."#comment-".$object->cid;
   }
 
   $flags = sq_flags_api_get_multiple($flags_args);
-
-  foreach($flags as $flag) $account_uids[] = $flag->uid;
+  if (isset($flags) && !empty($flags)) {
+    foreach($flags as $flag) {
+      $account_uids[] = $flag->uid;
+    }
+  }
   
   if(count($aids)) {
     foreach($aids as $aid) {

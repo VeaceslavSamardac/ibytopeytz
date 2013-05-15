@@ -42,8 +42,8 @@ echo '      </div>';
 <?php
 $base_text = StringTools::shorten(StringTools::striptags($topic->body['und'][0]['value']), 600, "...");
 
+$display_picture = false;
 if(preg_match_all('/<img[^>]+src="([^"]+)"[^>]*>/is', $topic->body['und'][0]['value'], $matches, PREG_SET_ORDER)) {
-  $display_picture = false;
   foreach($matches as $match) {
     if(!preg_match('/(\/emoticon|smiley.*?\.gif)/is', $match[1])) {
       $display_picture = $match[1];

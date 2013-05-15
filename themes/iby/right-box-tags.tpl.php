@@ -10,7 +10,7 @@ if(isset($_GET['q']) && strpos($_GET['q'], 'tags')) {
 
 $tags = iby_forums_get_comments_filter_tags($nid);
 
-if(count($tags->tags)):
+if (isset($tags) && count($tags->tags)):
 ?>
 <div class="<?php echo $parent_slug;?> <?php echo $parent_slug;?>-right-box ibyforum-right-box">
 

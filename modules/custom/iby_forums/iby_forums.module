@@ -106,11 +106,13 @@ function iby_forums_form_taxonomy_form_term_alter(&$form, &$form_state, $form_id
   unset($form['path']);
 
   $parent_tid = false;
-  if(isset($form['#term']) && is_array($form['#term']))
-    $parent_tid = $form['#term']['parent'][0];
+  if(is_array($form['#term']))
+    if(isset($form['#term']['parent'][0]))
+      $parent_tid = $form['#term']['parent'][0];
 
-  if(isset($form['relations']['parent']['#value']))
-    $parent_tid = $form['relations']['parent']['#value'][0];
+  if(isset($form['relations']) && is_array($form['relations']['parent']))
+    if(isset($form['relations']['parent']['#value']))
+      $parent_tid = $form['relations']['parent']['#value'][0];
 
   if(isset($form['relations']['parent']['#default_value']))
     $parent_tid = $form['relations']['parent']['#default_value'][0];
@@ -145,7 +147,7 @@ function iby_forums_form_taxonomy_form_term_alter(&$form, &$form_state, $form_id
         }
       }
 
-      // This is now obsolete
+    // This is now obsolete
     //  if(!isset($form['field_allowed_roles']['und']['#default_value'])
     //     || !is_array($form['field_allowed_roles']['und']['#default_value'])
     //     || !count($form['field_allowed_roles']['und']['#default_value'])) {
@@ -156,57 +158,52 @@ function iby_forums_form_taxonomy_form_term_alter(&$form, &$form_state, $form_id
     }
 
     switch($slug_name) {
-
-    case "challenges":
-      //unset($form['field_creator_uid']);
-      unset($form['field_tags']);
-      unset($form['field_vip_private']);
-      unset($form['field_vip_members']);
-      unset($form['field_vip_archived']);
-
-      $form['field_images']['#file_upload_title'] = t('Add images');
-      $form['name']['#title'] = t('Title');
-      $form['description']['#title'] = t('Description');
-      $form['description']['#description'] = t('max 2000 characters');
-
-      $form['description']['#maxlength'] = '2000';
-      $form['description']['#maxlength_js'] = true;
-
+      case "challenges":
+        //unset($form['field_creator_uid']);
+        unset($form['field_tags']);
+        unset($form['field_vip_private']);
+        unset($form['field_vip_members']);
+        unset($form['field_vip_archived']);
+        $form['field_images']['#file_upload_title'] = t('Add images');
+        $form['name']['#title'] = t('Title');
+        $form['description']['#title'] = t('Description');
+        $form['description']['#description'] = t('max 2000 characters');
+        $form['description']['#maxlength'] = '2000';
+        $form['description']['#maxlength_js'] = true;
       break;
-
-    case "chat_forums":
-      //unset($form['field_creator_uid']);
-      unset($form['field_enddate']);
-      unset($form['field_challenge_number']);
-      unset($form['field_tags']);
-      unset($form['field_vip_private']);
-      unset($form['field_vip_members']);
-      unset($form['field_vip_archived']);
-      $form['field_images']['#attributes']['class'][] = "hide-me";
-      $form['name']['#title'] = t('Title');
-      $form['description']['#title'] = t('Description');
+      case "chat_forums":
+        //unset($form['field_creator_uid']);
+        unset($form['field_enddate']);
+        unset($form['field_challenge_number']);
+        unset($form['field_tags']);
+        unset($form['field_vip_private']);
+        unset($form['field_vip_members']);
+        unset($form['field_vip_archived']);
+        $form['field_images']['#attributes']['class'][] = "hide-me";
+        $form['name']['#title'] = t('Title');
+        $form['description']['#title'] = t('Description');
       break;
-
-    case "vip_rooms":
-      //unset($form['field_creator_uid']);
-      unset($form['field_tags']);
-      unset($form['field_enddate']);
-      unset($form['field_challenge_number']);
-      unset($form['field_vip_members']);
-      //unset($form['field_vip_archived']);
-      $form['field_images']['#attributes']['class'][] = "hide-me";
-      $form['name']['#title'] = t('Title');
-      $form['description']['#title'] = t('Description');
+      case "vip_rooms":
+        //unset($form['field_creator_uid']);
+        unset($form['field_tags']);
+        unset($form['field_enddate']);
+        unset($form['field_challenge_number']);
+        unset($form['field_vip_members']);
+        //unset($form['field_vip_archived']);
+        $form['field_images']['#attributes']['class'][] = "hide-me";
+        $form['name']['#title'] = t('Title');
+        $form['description']['#title'] = t('Description');
       break;
     }
 
   }
-  //$form['actions']['submit']['#ajax'] = array('callback' => 'iby_forums_forum_node_form_submit',
-  //                                            'wrapper' => 'forum-node-form',
-  //                                            'name' => 'submit1',
-  //                                            );
 
-  $form['actions']['cancel'] = array('#type' => 'button', '#value' => 'Cancel', '#attributes' => array('onclick' => 'location.reload(); return false;'), '#weight' => 3);
+  $form['actions']['cancel'] = array(
+    '#type' => 'button',
+    '#value' => 'Cancel',
+    '#attributes' => array('onclick' => 'location.reload(); return false;'),
+    '#weight' => 3
+  );
   $form['actions']['submit']['#weight'] = 1;
   $form['actions']['preview']['#weight'] = 2;
 
@@ -234,37 +231,48 @@ function iby_forums_form_forum_node_form_alter(&$form, &$form_state, $form_id) {
   if(!$forum_id && (arg(0) == "node") && (arg(2) == "edit")) {
     $node_id = arg(1);
     $node = node_load($node_id);
-
     $forum_id = $node->taxonomy_forums[$langs[0]][0]['tid'];
   }
 
   $parent_tid = _iby_forums_get_parent_tid($forum_id);
-
   $forum_type = taxonomy_term_load($parent_tid);
-  $slug_name = StringTools::slug($forum_type->name);
-  $slug_perm_name = StringTools::slug($forum_type->name, " ");
 
-  switch($slug_name) {
-  case "tips_tricks":
-    $form['#action'] = $form['#action']."#tips_tricks_form";
-    unset($form['field_sticky']);
-    $form['field_sticky']['und']['#title'] = "Featured";
-    unset($form['field_sticky_global']);
-    $form['field_files']['#attributes']['class'][] = "hide-me";
-    $form['field_tags']['und']['#required'] = true;
-
-    break;
-  case "chat_forums":
-    if(!sqtools_is_admin($user) && !_iby_forums_check_access(false, false, "forum", "edit", false, $forum_id)) {
-      unset($form['field_sticky']);
-      unset($form['field_sticky_global']);
+  if ($forum_type) {
+    $slug_name = StringTools::slug($forum_type->name);
+    $slug_perm_name = StringTools::slug($forum_type->name, " ");
+    switch($slug_name) {
+      case "tips_tricks":
+        $form['#action'] = $form['#action']."#tips_tricks_form";
+        unset($form['field_sticky']);
+        $form['field_sticky']['und']['#title'] = "Featured";
+        unset($form['field_sticky_global']);
+        $form['field_files']['#attributes']['class'][] = "hide-me";
+        $form['field_tags']['und']['#required'] = true;
+      break;
+      case "chat_forums":
+        if(!sqtools_is_admin($user) && !_iby_forums_check_access(false, false, "forum", "edit", false, $forum_id)) {
+          unset($form['field_sticky']);
+          unset($form['field_sticky_global']);
+        }
+      break;
+      default:
+        unset($form['field_sticky']);
+        unset($form['field_sticky_global']);
+        unset($form['field_type']);
+      break;
     }
-    break;
-  default:
-    unset($form['field_sticky']);
-    unset($form['field_sticky_global']);
-    unset($form['field_type']);
-    break;
+
+    $query = db_select('taxonomy_term_hierarchy', 'th');
+    $query->fields('th', array('tid'));
+    $query->condition('th.parent', $forum_type->tid);
+    $tids = array();
+    $res = $query->execute();
+    if($res) {
+      foreach($res as $row) {
+        $tids[] = $row->tid;
+      }
+    }
+    $tids[] = $forum_type->tid;
   }
 
   $form['title']['#title'] = "Heading";
@@ -277,19 +285,6 @@ function iby_forums_form_forum_node_form_alter(&$form, &$form_state, $form_id) {
   $tax_lang = $form['taxonomy_forums']['#language'];
   $tax_options = $form['taxonomy_forums'][$tax_lang]['#options'];
 
-  $query = db_select('taxonomy_term_hierarchy', 'th');
-  $query->fields('th', array('tid'));
-  $query->condition('th.parent', $forum_type->tid);
-
-  $tids = array();
-  $res = $query->execute();
-  if($res) {
-    foreach($res as $row) {
-      $tids[] = $row->tid;
-    }
-  }
-  $tids[] = $forum_type->tid;
-
   unset($form['additional_settings']);
   unset($form['revision_information']);
   unset($form['options']);
@@ -300,11 +295,21 @@ function iby_forums_form_forum_node_form_alter(&$form, &$form_state, $form_id) {
 
   //$form['#action'] = '/node/add/forum/'.$forum_id.'?inline=1';
   //unset($form['actions']['preview']);
-  $form['actions']['submit']['#ajax'] = array('callback' => 'iby_forums_forum_node_form_submit',
-                                              'wrapper' => 'forum-node-form',
-                                              'name' => 'submit1',
-                                              );
-  $form['actions']['cancel'] = array('#type' => 'button', '#value' => 'Cancel', '#attributes' => array('onclick' => 'location.reload(); return false;'), '#weight' => 3);
+
+// COMMENTED DUE UNNECESSARY, IN ADITION GENERATING AJAX ERROR
+//  $form['actions']['submit']['#ajax'] = array(
+//    'callback' => 'iby_forums_forum_node_form_submit',
+//    'wrapper' => 'forum-node-form',
+//    'name' => 'submit1',
+//  );
+
+  $form['actions']['cancel'] = array(
+    '#type' => 'button',
+    '#value' => 'Cancel',
+    '#attributes' => array('onclick' => 'location.reload(); return false;'),
+    '#weight' => 3
+  );
+
   $form['actions']['submit']['#weight'] = 1;
   $form['actions']['submit']['#value'] = "Submit";
   $form['actions']['preview']['#weight'] = 2;
@@ -312,7 +317,9 @@ function iby_forums_form_forum_node_form_alter(&$form, &$form_state, $form_id) {
     unset($form['actions']['preview']['#attributes']['onclick']);
   }
   else {
-    $form['actions']['preview']['#attributes']['onclick'] = "jQuery('.node-form').each(function(){ this.setAttribute('action', '/node/add/forum/".$forum_id."?inline=1'); });";
+    $form['actions']['preview']['#attributes']['onclick'] = "
+      jQuery('.node-form').each(function(){ this.setAttribute('action', '/node/add/forum/".$forum_id."?inline=1'); });
+    ";
   }
 }
 
@@ -333,16 +340,18 @@ function iby_forums_form_comment_node_forum_form_alter(&$form, &$form_state, $fo
   $parent_tid = _iby_forums_get_parent_tid($forum_id);
 
   $forum_type = taxonomy_term_load($parent_tid);
-  $slug_name = StringTools::slug($forum_type->name);
-  $slug_perm_name = StringTools::slug($forum_type->name, " ");
-
-  switch($slug_name) {
-  case "tips_tricks":
-    $form['field_files']['#attributes']['class'][] = "hide-me";
-    break;
-  case "challenges":
-  case "chat_forums":
-  case "vip_rooms":
+  if ($forum_type) {
+    $slug_name = StringTools::slug($forum_type->name);
+    $slug_perm_name = StringTools::slug($forum_type->name, " ");
+    switch($slug_name) {
+      case "tips_tricks":
+        $form['field_files']['#attributes']['class'][] = "hide-me";
+      break;
+      case "challenges":
+      case "chat_forums":
+      case "vip_rooms":
+      break;
+    }
   }
 
   if(arg(2) == "edit") {
@@ -358,10 +367,13 @@ function iby_forums_form_comment_node_forum_form_alter(&$form, &$form_state, $fo
 
   $form['author']['#type'] = "hidden";
   //unset($form['author']);
-  $form['actions']['submit']['#ajax'] = array('callback' => 'iby_forums_form_comment_node_forum_form_submit',
-                                              'wrapper' => 'comment-form',
-                                              'name' => 'submit1',
-                                              );
+
+// COMMENTED DUE UNNECESSARY, IN ADITION GENERATING AJAX ERROR
+//  $form['actions']['submit']['#ajax'] = array(
+//    'callback' => 'iby_forums_form_comment_node_forum_form_submit',
+//    'wrapper' => 'comment-form',
+//    'name' => 'submit1',
+//  );
 
   $form['actions']['cancel'] = array('#type' => 'button', '#value' => 'Cancel', '#attributes' => array('onclick' => 'location.reload(); return false;'), '#weight' => 3);
   $form['actions']['submit']['#weight'] = 1;
@@ -370,19 +382,20 @@ function iby_forums_form_comment_node_forum_form_alter(&$form, &$form_state, $fo
   $form['actions']['submit']['#value'] = "Submit";
 }
 
-function iby_forums_forum_node_form_submit($form, &$form_state) {
-  if(isset($form_state['node']->nid) && $form_state['node']->nid) {
-    if(isset($form_state['confirm_delete']) && $form_state['confirm_delete']) {
-      return $form;
-    } else {
-      $commands = array();
-      $commands[] = ajax_command_invoke(NULL, 'goto_node', array($form_state['node']->nid));
-      $page = array('#type' => 'ajax', '#commands' => $commands);
-      ajax_deliver($page);
-    }
-
-  } else return $form;
-}
+// COMMENTED DUE UNNECESSARY, IN ADITION GENERATING AJAX ERROR
+// function iby_forums_forum_node_form_submit($form, &$form_state) {
+//   if(isset($form_state['node']->nid) && $form_state['node']->nid) {
+//     if(isset($form_state['confirm_delete']) && $form_state['confirm_delete']) {
+//       return $form;
+//     } else {
+//       $commands = array();
+//       $commands[] = ajax_command_invoke(NULL, 'goto_node', array($form_state['node']->nid));
+//       $page = array('#type' => 'ajax', '#commands' => $commands);
+//       ajax_deliver($page);
+//     }
+//
+//   } else return $form;
+// }
 
 function iby_forums_taxonomy_form_term_submit($form, &$form_state) {
   if(isset($form_state['term']->tid) && $form_state['term']->tid) {
@@ -393,19 +406,17 @@ function iby_forums_taxonomy_form_term_submit($form, &$form_state) {
   return $form;
 }
 
-function iby_forums_form_comment_node_forum_form_submit($form, &$form_state) {
-  $form['script']['#markup'] = '<script type="text/javascript">reinit_tinymce();</script>';
-
-  if(isset($form_state['comment']->cid) && $form_state['comment']->cid) {
-    $commands = array();
-
-    $page = comment_get_display_page($form_state['comment']->cid, 'forum');
-
-    $commands[] = ajax_command_invoke(NULL, 'goto_node', array($form_state['comment']->nid, $page));
-    $page = array('#type' => 'ajax', '#commands' => $commands);
-    ajax_deliver($page);
-  } else return $form;
-}
+// COMMENTED DUE UNNECESSARY, IN ADITION GENERATING AJAX ERROR
+// function iby_forums_form_comment_node_forum_form_submit($form, &$form_state) {
+//   $form['script']['#markup'] = '<script type="text/javascript">reinit_tinymce();</script>';
+//   if(isset($form_state['comment']->cid) && $form_state['comment']->cid) {
+//     $commands = array();
+//     $page = comment_get_display_page($form_state['comment']->cid, 'forum');
+//     $commands[] = ajax_command_invoke(NULL, 'goto_node', array($form_state['comment']->nid, $page));
+//     $page = array('#type' => 'ajax', '#commands' => $commands);
+//     ajax_deliver($page);
+//   } else return $form;
+// }
 
 /**
  * Menu callback; prints all members for a forum (not containers).
@@ -582,17 +593,29 @@ function iby_forum_page($forum = NULL) {
   if(!isset($forum)) { /* default is to show all forums - we show none... */ }
 
   $theme_name = "ibyforums";
-  $variables = array('forums' => $forum->forums, 'topics' => '', 'parents' => $forum->parents, 'tid' => $forum->tid, 'forums_per_page' => 10);
+
+  // Hack to eliminate Notice:
+  // Undefined property: stdClass::$last_post in template_preprocess_forum_list()
+  // (line 1147 of /var/www/ibytopeytz/modules/forum/forum.module).
+  foreach($forum->forums as $forum_id => $forum_item) {
+    $forum->forums[$forum_id]->last_post = '';
+  }
+
+  $variables = array(
+    'forums' => $forum->forums,
+    'topics' => '',
+    'parents' => $forum->parents,
+    'tid' => $forum->tid,
+    'forums_per_page' => 10
+  );
 
   if(empty($forum->container)) {
     $variables['topics'] = iby_forums_get_topics($forum->tid, 1, 25);
     $parents_count = count($forum->parents);
     $parents_count--;
     $parent = $forum->parents[$parents_count];
-
     $call_name = StringTools::slug($parent->name, "__");
     $real_name = StringTools::slug($parent->name, "--");
-
   } else {
     $call_name = StringTools::slug($forum->name, "__");
     $real_name = StringTools::slug($forum->name, "--");
@@ -633,8 +656,8 @@ function iby_forums_init() {
 
   $include_tids = array();
   if($forum_tid) {
-    $forum_type = taxonomy_term_load($forum_tid);
-    $slug_name = StringTools::slug($forum_type->name);
+    //$forum_type = taxonomy_term_load($forum_tid);
+    //$slug_name = StringTools::slug($forum_type->name);
 
     $include_tids = array($forum_tid);
     if($container) {
@@ -922,7 +945,6 @@ function iby_forum_forum_load($tid = NULL) {
   return $forum_term;
 }
 
-
 function iby_forums_get_filter_tags($forum_tid) {
   return iby_forums_get_forums_filter_tags($forum_tid);
 }
@@ -993,8 +1015,24 @@ function iby_forums_get_forums_filter_tags($forum_tid) {
       foreach($res as $row) {
        if(!isset($tags_tids[$row->field_tags_tid])) $tags_tids[$row->field_tags_tid] = 0;
         $tags_tids[$row->field_tags_tid]++;
-        if($row->tid && (!is_array($query_cache['tids']) || !in_array($row->tid, $query_cache['tids']))) $query_cache['tids'][] = $row->tid;
-        if($row->nid && (!is_array($query_cache['nids']) || !in_array($row->nid, $query_cache['nids']))) $query_cache['nids'][] = $row->nid;
+        if (
+          $row->tid
+        &&
+          isset($query_cache['tids'])
+        &&
+          (!is_array($query_cache['tids']) || !in_array($row->tid, $query_cache['tids']))
+        ) {
+          $query_cache['tids'][] = $row->tid;
+        }
+        if (
+          $row->nid
+        &&
+          isset($query_cache['nids'])
+        &&
+          (!is_array($query_cache['nids']) || !in_array($row->nid, $query_cache['nids']))
+        ) {
+          $query_cache['nids'][] = $row->nid;
+        }
       }
     }
   }
@@ -1047,7 +1085,7 @@ function iby_forums_get_nodes_filter_tags($forum_tid) {
     $query->fields('tags');//, array('field_tags_tid'));
 
     $forum = taxonomy_term_load($forum_tid);
-    if($forum->container) {
+    if(isset($forum->container) && $forum->container) {
       $in_query = db_select('taxonomy_term_hierarchy', 'th');
       $in_query->fields('th', array('tid'));
       $in_query->condition('th.parent', $forum_tid);
@@ -1057,7 +1095,6 @@ function iby_forums_get_nodes_filter_tags($forum_tid) {
     } else {
       $query->condition('tags.tid', $forum_tid);
     }
-
 
     // We only want to show nodes with comments - that is: show problems with a solution
     $tips_tricks_tid = _iby_forums_get_tid_from_name("Tips & Tricks", 2);
@@ -1081,7 +1118,6 @@ function iby_forums_get_nodes_filter_tags($forum_tid) {
       //  }
       //}
 
-
       $i = 1;
       foreach($_tags_tids as $tags_tid) {
         $query->join('iby_forum_tags_cache', 'tc'.$i, 'tc'.$i.'.nid = tags.nid AND tc'.$i.'.field_tags_tid='.$tags_tid);
@@ -1091,13 +1127,19 @@ function iby_forums_get_nodes_filter_tags($forum_tid) {
 
     $res = $query->execute();
 
+    $query_cache['nids'] = array();
     if($res) {
       foreach($res as $row) {
-        if(!isset($tags_tids[$row->field_tags_tid])) $tags_tids[$row->field_tags_tid] = 0;
+        if (!isset($tags_tids[$row->field_tags_tid])) {
+          $tags_tids[$row->field_tags_tid] = 0;
+        }
         $tags_tids[$row->field_tags_tid]++;
-        if($row->nid && !in_array($query_cache['nids'])) $query_cache['nids'][] = $row->nid;
+        if ($row->nid && !in_array($row->nid, $query_cache['nids'])) {
+          $query_cache['nids'][] = $row->nid;
+        }
       }
     }
+
   }
 
   //arsort($tags_tids, SORT_NUMERIC);

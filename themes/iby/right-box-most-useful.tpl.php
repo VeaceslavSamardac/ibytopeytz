@@ -1,5 +1,5 @@
 <?php
-if(!$tid) {
+if(!isset($tid) || !$tid) {
   $query = db_select('forum_index', 'fi');
   $query->join('node', 'n', 'n.status = 1 AND n.nid = fi.nid');
   $query->fields('fi', array('tid'));

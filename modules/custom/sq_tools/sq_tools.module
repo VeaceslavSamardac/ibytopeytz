@@ -321,7 +321,7 @@ class UrlTools {
     return self::build(self::parse($url));
   }
 
-  public static function parse($url) {
+  public static function parse($url = '') {
     if(!isset($url) || !$url) $url = $_SERVER['REQUEST_URI'];
     $url = self::addDomain($url);
     $urlinfo = parse_url($url);

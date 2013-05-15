@@ -20,8 +20,8 @@ $types = array('all', 'continence', 'ostomy');
 $current_type = 'all';
 if($filters->type && in_array($filters->type, $types)) $current_type = $filters->type;
 foreach($types as $type) {
-  echo '    <a href="'.UrlTools::addParams($base_url, array('type'=>$type)).'" class="ibyforum-type-'.$type.' '.$parent_slug.'-type-'.$type;
-  if($current_type == $type) echo ' ibyforum-type-active '.$parent_slug.'-type-active';
+  echo '    <a href="'.UrlTools::addParams($base_url, array('type'=>$type)).'" class="ibyforum-type-'.$type;
+  if($current_type == $type) echo ' ibyforum-type-active';
   echo '">'.ucfirst($type).'</a>'."\n";
 }
 ?>

@@ -1,8 +1,7 @@
 <?php
 $points = 0;
-if(isset($account->field_points) && is_array($account->field_points)) {
-  $langs = array_keys($account->field_points);
-  $points = intval($account->field_points[$langs[0]][0]['value']);
+if(isset($account->field_points) && !empty($account->field_points) && is_array($account->field_points)) {
+  $points = intval($account->field_points['und'][0]['value']);
 }
 $points = number_format($points, 0, "", ",");
 ?>

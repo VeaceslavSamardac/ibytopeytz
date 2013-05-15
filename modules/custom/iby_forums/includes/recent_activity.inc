@@ -369,5 +369,6 @@ function iby_forums_recent() {
 
   
   //echo "<!-- it took:".$timer->strTime()." -->\n";
-  return theme("recent_activity", array('activities' => $results, 'time'=>sprintf("%0.6f", (microtime(true)-$start))));
+  //return theme("recent_activity", array('activities' => $results, 'time'=>sprintf("%0.6f", (microtime(true)-$start))));
+  return theme("recent_activity", array('activities' => $results));
 }

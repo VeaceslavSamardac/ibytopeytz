@@ -7,8 +7,12 @@ $max_font = 21;
 $min_font = 12;
 $font_diff = ($max_font - $min_font);
 
-if($tags->info['diff']) $font_step = ($font_diff / $tags->info['diff']);
-else $font_step = 0;
+if(isset($tags->info['diff']) && $tags->info['diff']) {
+  $font_step = ($font_diff / $tags->info['diff']);
+}
+else {
+  $font_step = 0;
+}
 
 ?>
 <a name="tags"></a>
@@ -31,12 +35,14 @@ else $font_step = 0;
 
 <div style="clear:both;"></div>
 
+<?php /* ?>
 <div id="tags_search" style="float:right;height:0px;overflow:hidden;">
 <?php
 $search_form = drupal_get_form('forum_tags_search_form', NULL);
 echo render($search_form);
 ?>
 </div>
+<?php */ ?>
 
 <div style="clear:both;"></div>
 
