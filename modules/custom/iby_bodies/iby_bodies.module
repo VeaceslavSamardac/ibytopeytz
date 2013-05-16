@@ -111,25 +111,66 @@ function _iby_bodies_page() {
 
 function theme_iby_bodies_page($variables) {
   $output = '';
+
+
+
+//  $query = new EntityFieldQuery();
+//  $result = $query->entityCondition('entity_type', 'node')
+//    ->entityCondition('bundle', 'contenttype')
+//    ->execute();
+//  $nodes = node_load_multiple(array_keys($result['node']));
+
+//$nids = db_select('node', 'n')
+//  ->fields('n', array('nid'))
+//  ->fields('n', array('type'))
+//  ->condition('n.type', 'page')
+//  ->execute()
+//  ->fetchCol(); // returns an indexed array
+//$nodes = node_load_multiple($nids);
   
 
-  $query = new EntityFieldQuery();
-  $result = $query->entityCondition('entity_type', 'node')
-    //->entityCondition('bundle', 'contenttype')
-    ->execute();
-  //$nodes = node_load_multiple(array_keys($result['node']));
+
+$cts = array( 'article', 'blog', 'dashboard_slide', 'forum', 'important_notice', 'page', 'webform',);
 
 
-  $output .= 'all nodes: ' . count(array_keys($result['node']));
+foreach ($cts as $ct) {
+  $nids = db_select('field_data_body', 'n')
+    ->fields('n', array('entity_id'))
+    ->condition('n.bundle', $ct)
+    ->execute()
+    ->fetchCol(); // returns an indexed array
+  $output .= '<br> <br> count of "' . $ct . '": ' . count($nids);
+}
+
+
+$cids = db_select('field_data_comment_body', 'c')
+  ->fields('c', array('entity_id'))
+  ->condition('c.bundle', 'comment_node_forum')
+  ->execute()
+  ->fetchCol(); // returns an indexed array
+$output .= '<br> <br> count of "comments": ' . count($cids);
+
+
+$pids = db_select('pm_message', 'p')
+  ->fields('p', array('mid'))
+  ->execute()
+  ->fetchCol(); // returns an indexed array
+$output .= '<br> <br> count of "private": ' . count($pids);
+
+
+
+
+
+
 
 
 //  $form = drupal_get_form('iby_bodies_form');
 //  $output = drupal_render($form);
 
-  $output .= '<div class="request-new-password" style="float:left;">';
-  $output .= '<p>If you have trouble signing in or have changed your e-mail address, then please visit</p>';
-  $output .= '<p><a href="/node/17331">Request a new password</a></p>';
-  $output .= '</div>';
+//  $output .= '<div class="request-new-password">';
+//  $output .= '<p>If you have trouble signing in or have changed your e-mail address, then please visit</p>';
+//  $output .= '<p><a href="/node/17331">Request a new password</a></p>';
+//  $output .= '</div>';
 
   return $output;
 }
