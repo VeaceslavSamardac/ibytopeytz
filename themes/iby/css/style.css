@@ -331,34 +331,53 @@ display:block;
 
 table.privatemsg-list td.privatemsg-list-subject a{padding-left:0px;}
 
-.privatemsg-message-participants a.username, .privatemsg-author-name a.username{color:#0FA9C1;text-decoration:none;}
-.privatemsg-message-information{padding-bottom:5px;}
+
+.privatemsg-message-date { color:#C5C5C5; padding-right:1em; font-size:80%; }
+
+.privatemsg-author-name { font-size: 100%; padding-right: 1em; font-weight:normal; }
+.privatemsg-author-name a.username{color:#0FA9C1;text-decoration:none;}
+
+.privatemsg-message-body { color:#666666; font-family:Arial; font-size:13px; overflow:visible; padding:0; }
+
+.privatemsg-message-participants a.username,
+.privatemsg-author-name a.username {
+    color: #0FA9C1;
+    text-decoration: none;
+}
+
 .privatemsg-message .privatemsg-message-body{margin-left:0px;}
 
 .privatemsg-message .privatemsg-author-avatar{padding-top:0px;}
 
 .privatemsg-message{margin-top:30px;}
 
+div.privatemsg-message-information { border-bottom: 1px dotted #C5C5C5; margin-bottom: 5px; padding-bottom:5px; width: 100%; }
+
 .privatemsg-message-information ul.privatemsg-message-actions li{float:right;}
 
 .privatemsg-message-information .privatemsg-message-actions a {
 	background: url("../images/delete_message.png") no-repeat scroll right 4px transparent;
 	color: #666666;
-    font-size: 12px;
-    font-weight: bold;
+  font-size: 12px;
+  font-weight: bold;
 	padding: 0px 12px 0 0;
 	text-decoration: none;
-	}
-.privatemsg-message-information .privatemsg-message-actions a:hover{text-decoration:underline;color:#f17e58;
-background: url("../images/delete_message_red.png") no-repeat scroll right 4px transparent;
-    font-size: 12px;
-    font-weight: bold;
+}
+
+.privatemsg-message-information .privatemsg-message-actions a:hover{
+  text-decoration:underline;color:#f17e58;
+  background: url("../images/delete_message_red.png") no-repeat scroll right 4px transparent;
+  font-size: 12px;
+  font-weight: bold;
 	padding: 0px 12px 0 0;
-	text-decoration: underline;}
+	text-decoration: underline;
+}
+
 
 .content #privatemsg-list-form th.select-all{padding-left:11px;}
 .content #privatemsg-list-form table.privatemsg-list tbody td{padding-left:0px;}
 .content table.privatemsg-list td{vertical-align:middle;}
+
 
 h2.privatemsg-reply{color:#0FA9C1;font-size:16px;}
 
