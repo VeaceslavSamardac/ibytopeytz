@@ -1,0 +1,318 @@
+<?php
+
+function _iby_bodies_access() {
+  return user_is_logged_in();
+}
+
+/**
+ * Implements hook_menu().
+ */
+function iby_bodies_menu() { 
+  $items = array();
+  
+  $items['iby_bodies'] = array(
+    'title' => 'IBY Bodies',
+    'page callback' => '_iby_bodies_page',
+    'access callback' => '_iby_bodies_access',
+    'type' => MENU_CALLBACK
+  );
+  
+  return $items;
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function iby_bodies_theme() {
+  $themes = array();
+  
+  $themes['iby_bodies_page'] = array(
+    'variables' => array(),
+  );
+  
+//  $themes['iby_bodies_form'] = array(
+//    'render element' => 'form',
+//    'template' => 'iby-bodies-form',
+//  );
+   
+  return $themes;
+}
+
+function _iby_bodies_page() {
+  drupal_set_title(t('Get a new password'));
+  $output = theme('iby_bodies_page', array());
+  
+  return $output;
+}
+
+//function iby_bodies_form($form, &$form_state) {
+//  $terms_url = variable_get('iby_bodies_terms_url', 'legal');
+//  $options['attributes'] = array('class' => "sq-ajax-textpage-link");
+//  $options['query'] = array('show_ajax' => 1);
+//
+//  $form['mail'] = array(
+//    '#type' => 'textfield',
+//    '#title' => t('E-mail address'),
+//    '#maxlength' => EMAIL_MAX_LENGTH,
+//    '#description' => t('You use this email for logging in. We do not mis-use your e-mail bla bla bla.'),    
+//    '#required' => TRUE
+//  );
+//    
+//  $form['check'] = array(
+//    '#type' => 'checkbox',
+//    '#title' => t('I have read the !link', array('!link' => l(t('terms and conditions'), $terms_url, $options))),
+//    '#required' => TRUE
+//  );
+//  
+//  $form['field_newsletters'] = array(
+//    '#type' => 'checkbox',
+//    '#attributes' => array('checked' => 'checked'),
+//    '#title' => t('I wish to receive monthly newsletters to keep me up-to-date on what’s happening in this community.'),
+//  );
+//  
+//  $form['submit'] = array(
+//    '#type' => 'submit',
+//    '#value' => t('Send')
+//  );
+//
+//  return $form;
+//}
+
+//function iby_bodies_form_validate($form, &$form_state) { 
+//  $mail = trim($form_state['values']['mail']);
+//  // Try to load by email.
+//  $users = user_load_multiple(array(), array('mail' => $mail, 'status' => '1'));
+//  $account = reset($users);  
+//  if (isset($account->uid)) {
+//    form_set_value(array('#parents' => array('account')), $account, $form_state);
+//  }
+//  else {
+//    if (!empty($mail)) {
+//      form_set_error('name', t('Sorry, %name is not recognized as a user name or an e-mail address.', array('%name' => $mail)));
+//    }
+//  }
+//}
+
+//function iby_bodies_form_submit($form, &$form_state) { 
+//  module_load_include('inc', 'user', 'user.pages');
+//  user_pass_submit($form, $form_state);
+//}
+
+//function iby_bodies_form_iby_bodies_form_alter(&$form) {
+//  $form['#submit'][] = 'iby_bodies_form_iby_bodies_form_submit';
+//}
+
+//function iby_bodies_form_iby_bodies_form_submit(&$form, &$form_state) {
+//  $form_state['redirect'] = 'user/forgot';
+//}
+
+
+
+
+function theme_iby_bodies_page($variables) {
+  $output = '';
+  
+
+  $query = new EntityFieldQuery();
+  $result = $query->entityCondition('entity_type', 'node')
+    //->entityCondition('bundle', 'contenttype')
+    ->execute();
+  //$nodes = node_load_multiple(array_keys($result['node']));
+
+
+  $output .= 'all nodes: ' . count(array_keys($result['node']));
+
+
+//  $form = drupal_get_form('iby_bodies_form');
+//  $output = drupal_render($form);
+
+  $output .= '<div class="request-new-password" style="float:left;">';
+  $output .= '<p>If you have trouble signing in or have changed your e-mail address, then please visit</p>';
+  $output .= '<p><a href="/node/17331">Request a new password</a></p>';
+  $output .= '</div>';
+
+  return $output;
+}
+
+
+
+
+
+/**
+ * Perform modifications of inline images` paths.
+ */
+function _process_inline_images($body, $dest_uid = NULL, $source_nid = NULL) {
+
+  $ckeditor_path = libraries_get_path('ckeditor');
+  $smilie_path = '/' . $ckeditor_path . '/' . 'plugins/smiley/images/';
+
+  $smilies = array(
+    'smiley-cool.gif'          =>  'shades_smile.gif',
+    'smiley-cry.gif'           =>  'cry_smile.gif',
+    'smiley-embarassed.gif'    =>  'embaressed_smile.gif',
+    'smiley-foot-in-mouth.gif' =>  'smiley-foot-in-mouth.gif',//- not in ckeditor
+    'smiley-frown.gif'         =>  'sad_smile.gif',
+    'smiley-innocent.gif'      =>  'angel_smile.gif',
+    'smiley-kiss.gif'          =>  'kiss.gif',
+    'smiley-laughing.gif'      =>  'teeth_smile.gif',
+    'smiley-money-mouth.gif'   =>  'smiley-money-mouth.gif',//--- not in ckeditor
+    'smiley-sealed.gif'        =>  'smiley-sealed.gif',//-------- not in ckeditor
+    'smiley-smile.gif'         =>  'regular_smile.gif',
+    'smiley-surprised.gif'     =>  'omg_smile.gif',
+    'smiley-tongue-out.gif'    =>  'tounge_smile.gif',
+    'smiley-undecided.gif'     =>  'confused_smile.gif',
+    'smiley-wink.gif'          =>  'wink_smile.gif',
+    'smiley-yell.gif'          =>  'angry_smile.gif',
+  );
+
+  $imgtags = array();
+  $preg_result = preg_match_all('/<img[^>]+>/i', $body, $imgtags, PREG_SET_ORDER);
+  if ($preg_result != 0 OR $preg_result != FALSE) {
+    foreach ($imgtags as $tag) {
+
+      preg_match('/src=[\s]?"([^"]*)"/i',$tag[0], $img);
+
+
+      // == img tag should be removed --\
+      /*
+        forum_images/
+        system/files/
+        src=""
+        src="data:image/"
+        <img /> == no src at all
+      */
+      // == img tag should be removed --/
+
+      if (
+        (isset($img[1]) AND $img[1] == '') // src=""
+        OR
+        ($img == array()) // no src at all
+        OR
+        (strpos($img[1], 'forum_images/') !== false)
+        OR
+        (strpos($img[1], 'system/files/') !== false)
+        OR
+        (strpos($img[1], 'data:image/') !== false)
+      ) {
+        // Just remove crippled tags or tags with not used images.
+        $body = str_replace($tag, '', $body);
+        continue;
+      }
+
+
+      // ==  smileys search patterns --\
+      /*
+        smileys/
+        emotions/
+       */
+      // ==  smileys search patterns --/
+
+      if (
+        (strpos($img[1], 'smileys/') !== false)
+        OR
+        (strpos($img[1], 'emotions/') !== false)
+      ) {
+        // ! FOR NOW just remove smiles !
+        $body = str_replace($tag, '', $body);
+        continue;
+      }
+
+
+      // ==  images search patterns --\
+      /*
+        sites/default/files/http:__
+        sites/default/files/http://
+        sites/default/files/forum//sites/default/files/forum/uploads
+        http://www.innovationbyyou.com/sites/default/files/forum/uploads
+        forum/uploads
+        sites/default/files
+      */
+      // ==  images search patterns --/
+
+      if (strpos($img[1], 'http://www.iasupport.org/forum/uploads') !== false) {
+        // just pass some external images with 'forum/upload' in src
+        continue;
+      }
+
+      if (strpos($img[1], 'sites/default/files/http:__') !== false) {
+        //$file = explode('sites/default/files', $img[1]);
+        //$new_src = trim(array_pop($file), '/');
+        //$new_src = array_pop($file);
+        //$body = str_replace($img[1], $new_src, $body);
+        continue;
+      }
+
+      if (strpos($img[1], 'sites/default/files/http://') !== false) {
+        $file = explode('sites/default/files', $img[1]);
+        $new_src = trim(array_pop($file), '/');
+        $new_src = array_pop($file);
+        $body = str_replace($img[1], $new_src, $body);
+        continue;
+      }
+
+      if (strpos($img[1], 'sites/default/files/forum//sites/default/files/forum/uploads') !== false) {
+        $path = explode('//', $img[1]);
+        $img[1] = '/' . $path[1];
+      }
+
+      if (strpos($img[1], 'http://www.innovationbyyou.com/sites/default/files/forum/uploads') !== false) {
+        $path = explode('sites/default/files', $img[1]);
+        $img[1] = '/' . $path[1];
+      }
+
+      if (strpos($img[1], 'forum/uploads') !== false) {
+
+        $file = explode('/', $img[1]);
+        $filename = array_pop($file);
+        $filename_raw = rawurldecode(html_entity_decode($filename));
+
+        $source_path_file = IBY_MIGRATE_FILES . str_replace('/sites/default/files', '', $img[1]);
+        $source_path_file_raw = rawurldecode(html_entity_decode($source_path_file));
+        $source_path_xml = str_replace($filename, 'folder_info.xml', $source_path_file);
+        $source_path_xml_raw = rawurldecode(html_entity_decode($source_path_xml));
+
+        $xmlstr = file_get_contents($source_path_xml_raw);
+        $xmlobj = simplexml_load_string($xmlstr, NULL, LIBXML_NOCDATA);
+        $owner = get_object_vars($xmlobj->owner);
+        $owner_uid = $owner['uid'];
+
+        if (file_exists($source_path_file_raw)) {
+          // php 5.3 and above version
+          //$finfo = new finfo(FILEINFO_MIME);
+          //$info = $finfo->file($source_path_file_raw);
+          //$mime = substr($info, 0, strpos($info, ';'));
+
+          // php lower than 5.3 version
+          $info = mime_content_type($source_path_file_raw);
+
+          $type = substr($info, 0, strpos($info, '/'));
+          $size = filesize($source_path_file_raw);
+
+          $file_data = file_get_contents($source_path_file_raw);
+          $new_file = file_save_data($file_data, 'public://' . $filename_raw, FILE_EXISTS_REPLACE);
+          $new_file->uid = $dest_uid;
+          $new_file->type = $type;
+          file_save($new_file);
+          file_usage_add($new_file, 'user', 'user', $dest_uid);
+        }
+
+        $mediatag = mediatag_by_filename($filename_raw);
+        $body = str_replace($tag, $mediatag, $body);
+        continue;
+      }
+
+      if (strpos($img[1], 'sites/default/files') !== false) {
+        $file = explode('/', $img[1]);
+        $filename = rawurldecode(array_pop($file));
+        $mediatag = mediatag_by_filename($filename);
+        $body = str_replace($tag, $mediatag, $body);
+        continue;
+      }
+
+    }
+
+  }
+
+  return $body;
+
+}
