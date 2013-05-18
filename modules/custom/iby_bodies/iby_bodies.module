@@ -139,10 +139,11 @@ function theme_iby_bodies_page($variables) {
 
 
 $qwe = node_load(19728);
-//error_log(print_r($qwe->body['und'][0]['value'],1),3,'/home/asd/qwe.log');
 $body = _process_inline_images($qwe->body['und'][0]['value']);
 //$qwe->body['und'][0]['value'] = $body;
 //node_save($qwe);
+
+// /sites/default/files/forum/http://ibytopeytz.local/sites/innovationbyyou.com/files/forum/uploads/Paul/pouch%20secure.jpg
 
 
 
@@ -299,6 +300,9 @@ no entrys
         http://www.innovationbyyou.com/sites/default/files/forum/uploads
 2 - comments
 
+        sites/default/files/forum/uploads
+378 - forum
+
         forum/uploads
 380 - forum
 
@@ -309,15 +313,15 @@ no entrys
 
       if (strpos($img[1], 'http://www.iasupport.org/forum/uploads') !== false) {
         // just pass some external images with 'forum/upload' in src
-        continue;
+        //continue;
       }
 
-      if (strpos($img[1], 'innovationbyyou.com/sites/default') !== false) {
-        $file = explode('sites/default/files/', $img[1]);
-        $new_src = $public_path . $file[1];
-        $body = str_replace($img[1], $new_src, $body);
-        continue;
-      }
+if (strpos($img[1], 'innovationbyyou.com/sites/default') !== false) {
+  $file = explode('sites/default/files/', $img[1]);
+  $new_src = $public_path . $file[1];
+  $body = str_replace($img[1], $new_src, $body);
+  //continue;
+}
 
       if (strpos($img[1], 'sites/default/files/http:__') !== false) {
 // no entrys, all commented
@@ -325,19 +329,20 @@ no entrys
         //$new_src = trim(array_pop($file), '/');
         //$new_src = array_pop($file);
         //$body = str_replace($img[1], $new_src, $body);
-        continue;
+        //continue;
       }
 
       if (strpos($img[1], 'sites/default/files/http://') !== false) {
         $file = explode('sites/default/files/', $img[1]);
         $body = str_replace($img[1], $file[1], $body);
-        continue;
+        //continue;
       }
 
       if (strpos($img[1], 'sites/default/files/forum//sites/default/files/forum/uploads') !== false) {
         $file = explode('//', $img[1]);
-        $img[1] = '/' . $file[1];
-error_log(print_r($img,1),3,'/home/asd/qwe.log');
+        $new_src = '/' . $file[1];
+//error_log(print_r($new_src,1),3,'/home/asd/qwe.log');
+        $body = str_replace($img[1], $new_src, $body);
       }
 
 // - IN COMMENTS
@@ -346,8 +351,13 @@ error_log(print_r($img,1),3,'/home/asd/qwe.log');
 //        $img[1] = '/' . $path[1];
 //      }
 
+      if (strpos($img[1], 'sites/default/files/forum/uploads') !== false) {
+        $file = explode('sites/default/files/', $img[1]);
+        $new_src = $public_path . $file[1];
+        $body = str_replace($img[1], $new_src, $body);
+      }
+
 //      if (strpos($img[1], 'forum/uploads') !== false) {
-//
 //        $file = explode('/', $img[1]);
 //        $filename = array_pop($file);
 //        $filename_raw = rawurldecode(html_entity_decode($filename));
