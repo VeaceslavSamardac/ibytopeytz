@@ -137,19 +137,18 @@ function theme_iby_bodies_page($variables) {
 
 
 
+set_time_limit(300);
 
-$qwe = node_load(19728);
-$body = _process_inline_images($qwe->body['und'][0]['value']);
+
+
+
+//$qwe = node_load(19728);
+//$body = _process_inline_images($qwe->body['und'][0]['value']);
 //$qwe->body['und'][0]['value'] = $body;
 //node_save($qwe);
 
-// /sites/default/files/forum/http://ibytopeytz.local/sites/innovationbyyou.com/files/forum/uploads/Paul/pouch%20secure.jpg
-
-
-
-
-
-$cts = array( 'article', 'blog', 'dashboard_slide', 'forum', 'important_notice', 'page', 'webform',);
+//$cts = array( 'article', 'blog', 'dashboard_slide', 'forum', 'important_notice', 'page', 'webform',);
+$cts = array('forum', 'page');
 
 //foreach ($cts as $ct) {
 //  $nids = db_select('field_data_body', 'n')
@@ -157,21 +156,39 @@ $cts = array( 'article', 'blog', 'dashboard_slide', 'forum', 'important_notice',
 //    ->condition('n.bundle', $ct)
 //    ->execute()
 //    ->fetchCol(); // returns an indexed array
-//  $output .= '<br> <br> count of "' . $ct . '": ' . count($nids);
+//  //$output .= '<br> <br> count of "' . $ct . '": ' . count($nids);
 //  foreach ($nids as $nid) {
 //    $node = node_load($nid);
-//    $body = _process_inline_images($node->body['und'][0]['value']);
-//    $node->body['und'][0]['value']   = $body_text;
+//    $body_text = _process_inline_images($node->body['und'][0]['value']);
+//    $node->body['und'][0]['value'] = $body_text;
 //    node_save($node);
 //  }
 //}
 
-//$cids = db_select('field_data_comment_body', 'c')
-//  ->fields('c', array('entity_id'))
-//  ->condition('c.bundle', 'comment_node_forum')
+
+
+//$qwe = comment_load(35088);
+//$comm = _process_inline_images($qwe->comment_body['und'][0]['value']);
+////error_log(print_r($comm,1),3,'/home/asd/qwe.log');
+//$qwe->comment_body['und'][0]['value'] = $comm;
+//comment_submit($qwe);
+//comment_save($qwe);
+
+//$cids = db_select('field_data_comment_body', 'n')
+//  ->fields('n', array('entity_id'))
+//  ->condition('n.bundle', $ct)
 //  ->execute()
 //  ->fetchCol(); // returns an indexed array
-//$output .= '<br> <br> count of "comments": ' . count($cids);
+////$output .= '<br> <br> count of "' . $ct . '": ' . count($nids);
+//foreach ($cids as $cid) {
+//  $comm = comment_load($cid);
+//  $body_text = _process_inline_images($comm->comment_body['und'][0]['value']);
+//  $comm->comment_body['und'][0]['value'] = $body_text;
+//  comment_submit($comm);
+//  comment_save($comm);
+//}
+
+
 
 //$pids = db_select('pm_message', 'p')
 //  ->fields('p', array('mid'))
@@ -284,47 +301,57 @@ function _process_inline_images($body, $dest_uid = NULL) {
       // ==  images search patterns --\
       /*
 
-        innovationbyyou.com/sites/default
+        innovationbyyou.com/sites/default/files
 3 - page
 201 - forum
+269 - comments
 
         sites/default/files/http:__
 no entrys
 
         sites/default/files/http://
 16 - forum
+8 - comments
 
         sites/default/files/forum//sites/default/files/forum/uploads
 4 - forum
+0 - comments
 
-        http://www.innovationbyyou.com/sites/default/files/forum/uploads
+        innovationbyyou.com/sites/default/files/forum/uploads
+0 - forum
 2 - comments
 
         sites/default/files/forum/uploads
 378 - forum
+197 - comments
 
         forum/uploads
 380 - forum
-
+198 - comments
 
         sites/default/files
+
       */
       // ==  images search patterns --/
 
-      if (strpos($img[1], 'http://www.iasupport.org/forum/uploads') !== false) {
+      if (
+        (strpos($img[1], 'http://www.stoma-innovation.com/forum/uploads') !== false)
+      OR
+        (strpos($img[1], 'http://www.iasupport.org/forum/uploads') !== false)
+      ) {
         // just pass some external images with 'forum/upload' in src
-        //continue;
+        continue;
       }
 
-if (strpos($img[1], 'innovationbyyou.com/sites/default') !== false) {
-  $file = explode('sites/default/files/', $img[1]);
-  $new_src = $public_path . $file[1];
-  $body = str_replace($img[1], $new_src, $body);
-  //continue;
-}
+      if (strpos($img[1], 'innovationbyyou.com/sites/default/files') !== false) {
+        $file = explode('sites/default/files/', $img[1]);
+        $new_src = $public_path . $file[1];
+        $body = str_replace($img[1], $new_src, $body);
+        continue;
+      }
 
       if (strpos($img[1], 'sites/default/files/http:__') !== false) {
-// no entrys, all commented
+        // NO ENTRYS, SO ALL THIS PART COMMENTED
         //$file = explode('sites/default/files', $img[1]);
         //$new_src = trim(array_pop($file), '/');
         //$new_src = array_pop($file);
@@ -335,14 +362,16 @@ if (strpos($img[1], 'innovationbyyou.com/sites/default') !== false) {
       if (strpos($img[1], 'sites/default/files/http://') !== false) {
         $file = explode('sites/default/files/', $img[1]);
         $body = str_replace($img[1], $file[1], $body);
-        //continue;
+        continue;
       }
 
       if (strpos($img[1], 'sites/default/files/forum//sites/default/files/forum/uploads') !== false) {
         $file = explode('//', $img[1]);
         $new_src = '/' . $file[1];
-//error_log(print_r($new_src,1),3,'/home/asd/qwe.log');
+        $file = explode('sites/default/files/', $file[1]);
+        $new_src = $public_path . $file[1];
         $body = str_replace($img[1], $new_src, $body);
+        continue;
       }
 
 // - IN COMMENTS
@@ -355,6 +384,7 @@ if (strpos($img[1], 'innovationbyyou.com/sites/default') !== false) {
         $file = explode('sites/default/files/', $img[1]);
         $new_src = $public_path . $file[1];
         $body = str_replace($img[1], $new_src, $body);
+        continue;
       }
 
 //      if (strpos($img[1], 'forum/uploads') !== false) {
