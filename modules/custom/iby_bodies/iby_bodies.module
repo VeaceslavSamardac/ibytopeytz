@@ -101,20 +101,12 @@ function _iby_bodies_page() {
 
 
 function theme_iby_bodies_page($variables) {
+  set_time_limit(900);
   $output = '';
 
 
-set_time_limit(900);
-
-
-//$qwe = node_load(19801);
-//$body = _process_inline_images($qwe->body['und'][0]['value']);
-//$qwe->body['und'][0]['value'] = $body;
-//node_save($qwe);
-
 //$cts = array( 'article', 'blog', 'dashboard_slide', 'forum', 'important_notice', 'page', 'webform',);
 $cts = array('forum', 'page');
-
 //foreach ($cts as $ct) {
 //  $nids = db_select('field_data_body', 'n')
 //    ->fields('n', array('entity_id'))
@@ -123,7 +115,7 @@ $cts = array('forum', 'page');
 //    ->fetchCol(); // returns an indexed array
 //  $count_nids = count($nids);
 //error_log(print_r("\n",1),3,'/home/asd/qwe.log');
-//error_log(print_r('count of "' . $ct . '": ' . $count_nids,1),3,'/home/asd/qwe.log');
+//error_log(print_r($count_nids . ' of "' . $ct . '"',1),3,'/home/asd/qwe.log');
 //error_log(print_r("\n",1),3,'/home/asd/qwe.log');
 //  $curr = 0;
 //  foreach ($nids as $nid) {
@@ -140,54 +132,56 @@ $cts = array('forum', 'page');
 //}
 
 
-//$qwe = comment_load(35088);
-//$comm = _process_inline_images($qwe->comment_body['und'][0]['value']);
-////error_log(print_r($comm,1),3,'/home/asd/qwe.log');
-//$qwe->comment_body['und'][0]['value'] = $comm;
-//comment_submit($qwe);
-//comment_save($qwe);
-
-$cids = db_select('field_data_comment_body', 'n')
-  ->fields('n', array('entity_id'))
-  ->condition('n.bundle', 'comment_node_forum')
-  ->execute()
-  ->fetchCol(); // returns an indexed array
-$count_cids = count($cids);
-error_log(print_r("\n",1),3,'/home/asd/qwe.log');
-error_log(print_r('count of "comments": ' . $count_cids,1),3,'/home/asd/qwe.log');
-error_log(print_r("\n",1),3,'/home/asd/qwe.log');
-$curr = 0;
-foreach ($cids as $cid) {
-  $curr += 1;
-  $comm = comment_load($cid);
-  $body_text = _process_inline_images($comm->comment_body['und'][0]['value']);
-  $comm->comment_body['und'][0]['value'] = $body_text;
-  comment_submit($comm);
-  comment_save($comm);
-  if ((($count_cids - $curr) % 100) == 0) {
-error_log(print_r($curr,1),3,'/home/asd/qwe.log');
-error_log(print_r("\n",1),3,'/home/asd/qwe.log');
-  }
-}
+//$cids = db_select('field_data_comment_body', 'n')
+//  ->fields('n', array('entity_id'))
+//  ->condition('n.bundle', 'comment_node_forum')
+//  ->execute()
+//  ->fetchCol(); // returns an indexed array
+//$count_cids = count($cids);
+//error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//error_log(print_r($count_cids . ' of "comments"',1),3,'/home/asd/qwe.log');
+//error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//$curr = 0;
+//foreach ($cids as $cid) {
+//  $curr += 1;
+//  $comm = comment_load($cid);
+//  $body_text = _process_inline_images($comm->comment_body['und'][0]['value']);
+//  $comm->comment_body['und'][0]['value'] = $body_text;
+//  comment_submit($comm);
+//  comment_save($comm);
+//  if ((($count_cids - $curr) % 100) == 0) {
+//error_log(print_r($curr,1),3,'/home/asd/qwe.log');
+//error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//  }
+//}
 
 
-
-//$pids = db_select('pm_message', 'p')
+//$pmids = db_select('pm_message', 'p')
 //  ->fields('p', array('mid'))
 //  ->execute()
 //  ->fetchCol(); // returns an indexed array
-//$output .= '<br> <br> count of "private": ' . count($pids);
-//privatemsg_message_load($pmid);
-//privatemsg_message_change_delete($pmid, FALSE);
-
+//$count_pmids = count($pmids);
+//error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//error_log(print_r($count_pmids . ' of "pmessages"',1),3,'/home/asd/qwe.log');
+//error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//$curr = 0;
+//foreach ($pmids as $pmid) {
+//  $curr += 1;
+//  $pmsg = privatemsg_message_load($pmid);
+//  $body_text = _process_inline_images($comm->comment_body['und'][0]['value']);
+//  $comm->comment_body['und'][0]['value'] = $body_text;
+//  privatemsg_message_change_delete($pmid, FALSE);
+//  if ((($count_cids - $curr) % 100) == 0) {
+//  error_log(print_r($curr,1),3,'/home/asd/qwe.log');
+//  error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//  }
+//}
 
 
 //  $form = drupal_get_form('iby_bodies_form');
 //  $output = drupal_render($form);
-
 //  $output .= '<div class="request-new-password">';
 //  $output .= '<p>If you have trouble signing in or have changed your e-mail address, then please visit</p>';
-//  $output .= '<p><a href="/node/17331">Request a new password</a></p>';
 //  $output .= '</div>';
 
   return $output;
@@ -231,7 +225,6 @@ function _process_inline_images($body, $dest_uid = NULL) {
         (strpos($tag[0], 'src="/sites/default/files/forum/forum_images/back_to_top.png"') !== false)
         OR
         (strpos($tag[0], 'src="/sites/default/files/forum/upl"') !== false)
-
         //- maybe shouldnt be removed, images hardcodedd into bodies
         //OR
         //(strpos($img[1], 'data:image/') !== false)
@@ -264,68 +257,64 @@ function _process_inline_images($body, $dest_uid = NULL) {
       /*
 
 
-        innovationbyyou.com/sites/default/files
-3 - page
-201 - forum
-269 - comments
-  11 - pmsg
-
-
         sites/default/files/http:__
-no entrys
+no entrys ?
 
 
-+        sites/default/files/http://
-16 - forum
++       sites/default/files/http://
+16 - body
 8 - comments
 0 - pmsg
 
 
-+        sites/default/files/forum//sites/default/files/forum/uploads
-4 - forum
++       sites/default/files/forum//sites/default/files/forum/uploads
+4 - body
 0 - comments
 0 - pmsg
 
 
-+        innovationbyyou.com/sites/default/files/forum/uploads
-0 - forum
-2 - comments
-0 - pmsg
-
-
--        sites/default/files/forum/uploads
-378 - forum
+-       sites/default/files/forum/uploads
+378 - body
 197 - comments
   35525 - problematic comment
 0 - pmsg
 
 
-+        /sites/default/files/forum//sites/default/files/forum/smileys
-? - forum
++       /sites/default/files/forum//sites/default/files/forum/smileys
+2 - body
 33 - comments
 0 - pmsg
 
 
-        /sites/default/files/forum/smileys
-//SELECT entity_id, comment_body_value
-//FROM `ibytopeytz`.`field_data_comment_body`
-//WHERE comment_body_value LIKE '%%/sites/default/files/forum/smileys%%'
-//17 items problematic ??
-? - forum
-1696 - comments
+-       /sites/default/files/forum/smileys
+145 - forum
+1697 - comments
 0 - pmsg
+  //SELECT *
+  //FROM `ibytopeytz`.`field_data_comment_body`
+  //WHERE comment_body_value LIKE '%%/sites/default/files/forum/smileys%%'
+  //17 items problematic comments ??
 
 
-//        forum/uploads
-//380 - forum
-//198 - comments
+-       innovationbyyou.com/sites/default/files
+204 - body
+269 - comments
+11 - pmsg
+  //SELECT mid, body
+  //FROM `ibytopeytz`.`pm_message`
+  //WHERE `body` LIKE '%%innovationbyyou.com/sites/default/files%%'
+  //11 items problematic pmsgs ??
 
 
         sites/default/files
-//SELECT entity_id, comment_body_value
-//FROM `ibytopeytz`.`field_data_comment_body`
-//WHERE comment_body_value LIKE '%%sites/default/files%%'
-//23 items problematic ??
+690 - body
+2142 - comments
+12 - pmsg
+  //SELECT entity_id, comment_body_value
+  //FROM `ibytopeytz`.`field_data_comment_body`
+  //WHERE `comment_body_value` LIKE '%%sites/default/files%%'
+  //23 items problematic comments ??
+
 
       */
       // ==  images search patterns --/
@@ -336,13 +325,6 @@ no entrys
         (strpos($img[1], 'http://www.iasupport.org/forum/uploads') !== false)
       ) {
         // just pass some external images with 'forum/upload' in src
-        continue;
-      }
-
-      if (strpos($img[1], 'innovationbyyou.com/sites/default/files') !== false) {
-        $file = explode('sites/default/files/', $img[1]);
-        $new_src = $public_path . $file[1];
-        $body = str_replace($img[1], $new_src, $body);
         continue;
       }
 
@@ -387,6 +369,13 @@ no entrys
       }
 
       if (strpos($img[1], '/sites/default/files/forum/smileys') !== false) {
+        $file = explode('sites/default/files/', $img[1]);
+        $new_src = $public_path . $file[1];
+        $body = str_replace($img[1], $new_src, $body);
+        continue;
+      }
+
+      if (strpos($img[1], 'innovationbyyou.com/sites/default/files') !== false) {
         $file = explode('sites/default/files/', $img[1]);
         $new_src = $public_path . $file[1];
         $body = str_replace($img[1], $new_src, $body);
