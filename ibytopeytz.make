@@ -251,10 +251,10 @@ projects[google_analytics][download][type] = git
 projects[google_analytics][download][url] = http://git.drupal.org/project/google_analytics.git
 projects[google_analytics][download][tag] = 7.x-1.3
 
-;projects[libraries][subdir] = "contrib"
-;projects[libraries][download][type] = git
-;projects[libraries][download][url] = http://git.drupal.org/project/libraries.git
-;projects[libraries][download][tag] = 7.x-2.1   
+projects[libraries][subdir] = "contrib"
+projects[libraries][download][type] = git
+projects[libraries][download][url] = http://git.drupal.org/project/libraries.git
+projects[libraries][download][tag] = 7.x-2.1
 
 projects[login_destination][subdir] = "contrib"
 projects[login_destination][download][type] = git

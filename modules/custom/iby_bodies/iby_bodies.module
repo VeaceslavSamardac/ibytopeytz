@@ -1,0 +1,567 @@
+<?php
+
+/**
+ * Implementation of access callback for iby_bodies_menu().
+ */
+function _iby_bodies_access() {
+  return user_is_logged_in();
+}
+
+/**
+ * Implements hook_menu().
+ */
+function iby_bodies_menu() { 
+  $items = array();
+  $items['iby_bodies'] = array(
+    'title' => 'IBY Bodies',
+    //'page callback' => '_iby_bodies_page',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('iby_bodies_form'),
+    'access callback' => '_iby_bodies_access',
+    'type' => MENU_CALLBACK
+  );
+  return $items;
+}
+
+/**
+ * Form builder function to allow choice of which batch to run.
+ */
+function iby_bodies_form() {
+  $form['batch'] = array(
+    '#type' => 'select',
+    '#title' => 'Choose batch',
+    '#options' => array(
+      'batch_0' => t('----------------'),
+      'batch_1' => t('pages'),
+      'batch_2' => t('forum messages'),
+      'batch_3' => t('comments'),
+      'batch_4' => t('private messages'),
+      'batch_5' => t('terms'),
+    ),
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Go',
+  );
+  return $form;
+}
+
+function iby_bodies_form_submit($form, &$form_state) {
+  $function = 'iby_bodies_' . $form_state['values']['batch'];
+  $_SESSION['http_request_count'] = 0; // reset counter for debug information.
+  $batch = $function();
+  batch_set($batch);
+}
+
+
+
+function iby_bodies_batch_0() {
+  drupal_set_message(t('Creating an array of @num operations', array('@num' => $num_operations)));
+}
+
+
+
+// PAGES
+function iby_bodies_batch_1() {
+  $nids = db_select('field_data_body', 'n')
+    ->fields('n', array('entity_id'))
+    ->condition('n.bundle', 'page')
+    ->execute()
+    ->fetchCol();
+  $num_operations = count($nids);
+  drupal_set_message(t('Creating an array of @num operations', array('@num' => $num_operations)));
+  $operations = array();
+  for ($i = 0; $i<$num_operations; $i++) {
+    $operations[] = array('iby_bodies_op_1', array($nids[$i], t('(Operation @operation)', array('@operation' => $i))));
+  }
+  $batch = array(
+    'operations' => $operations,
+    'finished' => 'iby_bodies_finished',
+  );
+  return $batch;
+}
+
+function iby_bodies_op_1($nid, $operation_details, &$context) {
+  $node = node_load($nid);
+  $body_text = _process_inline_images($node->body['und'][0]['value']);
+  $node->body['und'][0]['value'] = $body_text;
+  node_save($node);
+
+  $context['results'][] = $node->nid . ' : ' . check_plain($node->title);
+  $context['message'] = t('Loading node "@title"', array('@title' => $node->title)) . ' ' . $operation_details;
+  _iby_bodies_update_http_requests();
+}
+
+
+
+// FORUM TOPICS
+function iby_bodies_batch_2() {
+  $nids = db_select('field_data_body', 'n')
+    ->fields('n', array('entity_id'))
+    ->condition('n.bundle', 'forum')
+    ->execute()
+    ->fetchCol();
+  $num_operations = count($nids);
+  drupal_set_message(t('Creating an array of @num operations', array('@num' => $num_operations)));
+  $operations = array();
+  for ($i = 0; $i<$num_operations; $i++) {
+    $operations[] = array('iby_bodies_op_2', array($nids[$i], t('(Operation @operation)', array('@operation' => $i))));
+  }
+  $batch = array(
+    'operations' => $operations,
+    'finished' => 'iby_bodies_finished',
+  );
+  return $batch;
+}
+
+function iby_bodies_op_2($nid, $operation_details, &$context) {
+  $node = node_load($nid);
+  $body_text = _process_inline_images($node->body['und'][0]['value']);
+  $node->body['und'][0]['value'] = $body_text;
+  node_save($node);
+
+  $context['results'][] = $node->nid . ' : ' . check_plain($node->title);
+  $context['message'] = t('Loading node "@title"', array('@title' => $node->title)) . ' ' . $operation_details;
+  _iby_bodies_update_http_requests();
+}
+
+
+
+// COMMENTS
+function iby_bodies_batch_3() {
+  $cids = db_select('field_data_comment_body', 'c')
+    ->fields('c', array('entity_id'))
+    ->condition('c.bundle', 'comment_node_forum')
+    ->execute()
+    ->fetchCol();
+  $num_operations = count($cids);
+  drupal_set_message(t('Creating an array of @num operations', array('@num' => $num_operations)));
+  $operations = array();
+  for ($i = 0; $i<$num_operations; $i++) {
+    $operations[] = array('iby_bodies_op_3', array($cids[$i], t('(Operation @operation)', array('@operation' => $i))));
+  }
+  $batch = array(
+    'operations' => $operations,
+    'finished' => 'iby_bodies_finished',
+  );
+  return $batch;
+}
+
+function iby_bodies_op_3($cid, $operation_details, &$context) {
+  $comm = comment_load($cid);
+  $body_text = _process_inline_images($comm->comment_body['und'][0]['value']);
+//  $num_updated = db_update('field_data_comment_body')
+//    ->fields(array('comment_body_value' => $body_text))
+//    ->condition('entity_id', $cid, '=')
+//    ->execute();
+  $comm->comment_body['und'][0]['value'] = $body_text;
+  comment_submit($comm);
+  comment_save($comm);
+
+  $context['results'][] = $comm->cid . ' : ' . check_plain($comm->title);
+  $context['message'] = t('Loading comment "@title"', array('@title' => $comm->title)) . ' ' . $operation_details;
+  _iby_bodies_update_http_requests();
+}
+
+
+
+// PRIVATE MESSAGES
+function iby_bodies_batch_4() {
+  $pmids = db_select('pm_message', 'p')
+    ->fields('p', array('mid'))
+    ->execute()
+    ->fetchCol();
+  $num_operations = count($pmids);
+  drupal_set_message(t('Creating an array of @num operations', array('@num' => $num_operations)));
+  $operations = array();
+  for ($i = 0; $i<$num_operations; $i++) {
+    $operations[] = array('iby_bodies_op_4', array($pmids[$i], t('(Operation @operation)', array('@operation' => $i))));
+  }
+  $batch = array(
+    'operations' => $operations,
+    'finished' => 'iby_bodies_finished',
+  );
+  return $batch;
+}
+
+function iby_bodies_op_4($pmid, $operation_details, &$context) {
+  $pmsg = privatemsg_message_load($pmid);
+  $body_text = _process_inline_images($pmsg->body);
+  if ($body_text != '') {
+  $num_updated = db_update('pm_message')
+    ->fields(array('body' => $body_text))
+    ->condition('mid', $pmid, '=')
+    ->execute();
+  }
+
+  $context['results'][] = $pmsg->mid . ' : ' . check_plain($pmsg->title);
+  $context['message'] = t('Loading private message "@title"', array('@title' => $pmsg->title)) . ' ' . $operation_details;
+  _iby_bodies_update_http_requests();
+}
+
+
+
+// TERMS
+function iby_bodies_batch_5() {
+  $tids = db_select('taxonomy_term_data', 't')
+    ->fields('t', array('tid'))
+    ->execute()
+    ->fetchCol(); // returns an indexed array
+  $num_operations = count($tids);
+  drupal_set_message(t('Creating an array of @num operations', array('@num' => $num_operations)));
+  $operations = array();
+  for ($i = 0; $i<$num_operations; $i++) {
+    $operations[] = array('iby_bodies_op_5', array($tids[$i], t('(Operation @operation)', array('@operation' => $i))));
+  }
+  $batch = array(
+    'operations' => $operations,
+    'finished' => 'iby_bodies_finished',
+  );
+  return $batch;
+}
+
+function iby_bodies_op_5($tid, $operation_details, &$context) {
+  $term = taxonomy_term_load($tid);
+  $body_text = _process_inline_images($term->description);
+  if ($body_text != '') {
+    $num_updated = db_update('taxonomy_term_data')
+      ->fields(array('description' => $body_text))
+      ->condition('tid', $tid, '=')
+      ->execute();
+  }
+
+  $context['results'][] = $term->tid . ' : ' . check_plain($term->title);
+  $context['message'] = t('Loading term "@title"', array('@title' => $term->title)) . ' ' . $operation_details;
+  _iby_bodies_update_http_requests();
+}
+
+
+
+function iby_bodies_finished($success, $results, $operations) {
+  if ($success) {
+    drupal_set_message(t('@count results processed in @requests HTTP requests.', array('@count' => count($results), '@requests' => _iby_bodies_get_http_requests())));
+    drupal_set_message(t('The final result was "%final"', array('%final' => end($results))));
+  }
+  else {
+    $error_operation = reset($operations);
+    drupal_set_message(t('An error occurred while processing @operation with arguments : @args', array('@operation' => $error_operation[0], '@args' => print_r($error_operation[0], TRUE))));
+  }
+}
+
+function _iby_bodies_update_http_requests() {
+  $_SESSION['http_request_count']++;
+}
+
+function _iby_bodies_get_http_requests() {
+  return !empty($_SESSION['http_request_count']) ? $_SESSION['http_request_count'] : 0;
+}
+
+
+
+
+
+/**
+ * Implementation of page callback for iby_bodies_menu().
+ */
+//function _iby_bodies_page() {/*{{{*/
+//  drupal_set_title(t('images in bodies'));
+//  $output = theme('iby_bodies_page', array());
+//  return $output;
+//}/*}}}*/
+
+/**
+ * Implementation of hook_theme().
+ */
+//function iby_bodies_theme() {/*{{{*/
+//  $themes = array();
+//  $themes['iby_bodies_page'] = array(
+//    'variables' => array(),
+//  );
+//  return $themes;
+//}/*}}}*/
+
+/**
+ * Implementation of theme function.
+ */
+function theme_iby_bodies_page($variables) {/*{{{*/
+/*
+  set_time_limit(900);
+  $output = '';
+
+  $cts = array('forum', 'page');
+
+//  // NODES
+//  foreach ($cts as $ct) {
+//    $nids = db_select('field_data_body', 'n')
+//      ->fields('n', array('entity_id'))
+//      ->condition('n.bundle', $ct)
+//      ->execute()
+//      ->fetchCol(); // returns an indexed array
+//    $count_nids = count($nids);
+//  error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//  error_log(print_r($count_nids . ' of "' . $ct . '"',1),3,'/home/asd/qwe.log');
+//  error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//    $curr = 0;
+//    foreach ($nids as $nid) {
+//      $curr += 1;
+//      $node = node_load($nid);
+//      $body_text = _process_inline_images($node->body['und'][0]['value']);
+//      $node->body['und'][0]['value'] = $body_text;
+//      node_save($node);
+//      if ((($count_nids - $curr) % 100) == 0) {
+//  error_log(print_r($curr,1),3,'/home/asd/qwe.log');
+//  error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//      }
+//    }
+//  }
+
+//  // COMMENTS
+//  $cids = db_select('field_data_comment_body', 'n')
+//    ->fields('n', array('entity_id'))
+//    ->condition('n.bundle', 'comment_node_forum')
+//    ->execute()
+//    ->fetchCol(); // returns an indexed array
+//  $count_cids = count($cids);
+//  error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//  error_log(print_r($count_cids . ' of "comments"',1),3,'/home/asd/qwe.log');
+//  error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//  $curr = 0;
+//  foreach ($cids as $cid) {
+//    $curr += 1;
+//    $comm = comment_load($cid);
+//    $body_text = _process_inline_images($comm->comment_body['und'][0]['value']);
+//    $num_updated = db_update('field_data_comment_body')
+//      ->fields(array('comment_body_value' => $body_text))
+//      ->condition('entity_id', $cid, '=')
+//      ->execute();
+//  //  $comm->comment_body['und'][0]['value'] = $body_text;
+//  //  comment_submit($comm);
+//  //  comment_save($comm);
+//    if ((($count_cids - $curr) % 100) == 0) {
+//  error_log(print_r($curr,1),3,'/home/asd/qwe.log');
+//  error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//    }
+//  }
+
+//  // PRIVATE MESSAGES
+//  $pmids = db_select('pm_message', 'p')
+//    ->fields('p', array('mid'))
+//    ->execute()
+//    ->fetchCol(); // returns an indexed array
+//  $count_pmids = count($pmids);
+//  error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//  error_log(print_r($count_pmids . ' of "pmessages"',1),3,'/home/asd/qwe.log');
+//  error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//  $curr = 0;
+//  foreach ($pmids as $pmid) {
+//    $curr += 1;
+//    $pmsg = privatemsg_message_load($pmid);
+//    $body_text = _process_inline_images($pmsg->body);
+//    if ($body_text != '') {
+//    $num_updated = db_update('pm_message')
+//      ->fields(array('body' => $body_text))
+//      ->condition('mid', $pmid, '=')
+//      ->execute();
+//    }
+//    if ((($count_cids - $curr) % 100) == 0) {
+//  error_log(print_r($curr,1),3,'/home/asd/qwe.log');
+//  error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//    }
+//  }
+
+//  // TERMS
+//  $tids = db_select('taxonomy_term_data', 't')
+//    ->fields('t', array('tid'))
+//    ->execute()
+//    ->fetchCol(); // returns an indexed array
+//  $count_tids = count($tids);
+//  error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//  error_log(print_r($count_tids . ' of "terms"',1),3,'/home/asd/qwe.log');
+//  error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//  $curr = 0;
+//  foreach ($tids as $tid) {
+//    $curr += 1;
+//    $term = taxonomy_term_load($tid);
+//    $body_text = _process_inline_images($term->description);
+//    if ($body_text != '') {
+//    $num_updated = db_update('taxonomy_term_data')
+//      ->fields(array('description' => $body_text))
+//      ->condition('tid', $tid, '=')
+//      ->execute();
+//    }
+//    if ((($count_cids - $curr) % 100) == 0) {
+//  error_log(print_r($curr,1),3,'/home/asd/qwe.log');
+//  error_log(print_r("\n",1),3,'/home/asd/qwe.log');
+//    }
+//  }
+
+  return $output;
+*/
+}/*}}}*/
+
+/**
+ * Perform modifications of inline images` paths, main magic.
+ */
+function _process_inline_images($body, $dest_uid = NULL) {/*{{{*/
+
+  $public_path = file_create_url('public://');
+  $tinymce_path = url(libraries_get_path('tinymce'), array('absolute'=>true));
+
+  $imgtags = array();
+  $preg_result = preg_match_all('/<img[^>]+>/i', $body, $imgtags, PREG_SET_ORDER);
+  if ($preg_result != 0 OR $preg_result != FALSE) {
+    foreach ($imgtags as $tag) {
+
+      preg_match('/src=[\s]?"([^"]*)"/i',$tag[0], $img);
+
+      // == img tag should be removed --\
+      /*
+        forum_images/
+        system/files/
+        src=""
+        src="data:image/ //- maybe shouldnt be removed, images hardcodedd into bodies
+        <img /> == no src at all
+        src="/sites/default/files/forum/forum_images/back_to_top.png"
+        src="/sites/default/files/forum/upl"
+      */
+      // == img tag should be removed --/
+
+      if (
+        (isset($img[1]) AND $img[1] == '') // src=""
+        OR
+        ($img == array()) // no src at all
+        OR
+        (strpos($img[1], 'forum_images/') !== false)
+        OR
+        (strpos($img[1], 'system/files/') !== false)
+        OR
+        (strpos($tag[0], 'src="/sites/default/files/forum/forum_images/back_to_top.png"') !== false)
+        OR
+        (strpos($tag[0], 'src="/sites/default/files/forum/upl"') !== false)
+        //- maybe shouldnt be removed, images hardcodedd into bodies
+        //OR
+        //(strpos($img[1], 'data:image/') !== false)
+      ) {
+        // Just remove crippled tags or tags with not used images.
+        $body = str_replace($tag, '', $body);
+        continue;
+      }
+
+
+      // ==  images search patterns --\
+      /*
+
+        sites/default/files/http:__
+        ? no entrys ?
+
+        sites/default/files/http://
+        + 16 - body, 8 - comments, 0 - pmsg
+
+        sites/default/files/forum//sites/default/files/forum/uploads
+        + 4 - body, 0 - comments, 0 - pmsg
+
+        sites/default/files/forum/uploads
+        + 378 - body, 197 - comments, 0 - pmsg
+
+        /sites/default/files/forum//sites/default/files/forum/smileys
+        + 2 - body, 33 - comments, 0 - pmsg
+
+        /sites/default/files/forum/smileys
+        + 145 - forum, 1697 - comments, 0 - pmsg
+
+        innovationbyyou.com/sites/default/files
+        + 204 - body, 269 - comments, 11 - pmsg
+
+        sites/default/files
+        + 690 - body, 2142 - comments, 12 - pmsg
+          22 comments not updated, comment_load() dont load comments from deleted nodes
+
+        sites/all/libraries
+          72 - body, 609 - comments, 327 - pmsg, 20 - terms
+
+      */
+      // ==  images search patterns --/
+
+      if (
+        (strpos($img[1], 'http://www.stoma-innovation.com/forum/uploads') !== false)
+      OR
+        (strpos($img[1], 'http://www.iasupport.org/forum/uploads') !== false)
+      ) {
+        // just pass some external images with 'forum/upload' in src
+        continue;
+      }
+
+      if (strpos($img[1], 'sites/default/files/http:__') !== false) {
+        // NO ENTRYS, SO ALL THIS PART COMMENTED
+        //$file = explode('sites/default/files', $img[1]);
+        //$new_src = trim(array_pop($file), '/');
+        //$new_src = array_pop($file);
+        //$body = str_replace($img[1], $new_src, $body);
+        //continue;
+      }
+
+      if (strpos($img[1], 'sites/default/files/http://') !== false) {
+        $file = explode('sites/default/files/', $img[1]);
+        $body = str_replace($img[1], $file[1], $body);
+        continue;
+      }
+
+      if (strpos($img[1], 'sites/default/files/forum//sites/default/files/forum/uploads') !== false) {
+        $file = explode('//', $img[1]);
+        $new_src = '/' . $file[1];
+        $file = explode('sites/default/files/', $file[1]);
+        $new_src = $public_path . $file[1];
+        $body = str_replace($img[1], $new_src, $body);
+        continue;
+      }
+
+      if (strpos($img[1], 'sites/default/files/forum/uploads') !== false) {
+        $file = explode('sites/default/files/', $img[1]);
+        $new_src = $public_path . $file[1];
+        $body = str_replace($img[1], $new_src, $body);
+        continue;
+      }
+
+      if (strpos($img[1], 'sites/default/files/forum//sites/default/files/forum/smileys') !== false) {
+        $file = explode('//', $img[1]);
+        $new_src = '/' . $file[1];
+        $file = explode('sites/default/files/', $file[1]);
+        $new_src = $public_path . $file[1];
+        $body = str_replace($img[1], $new_src, $body);
+        continue;
+      }
+
+      if (strpos($img[1], 'sites/default/files/forum/smileys') !== false) {
+        $file = explode('sites/default/files/', $img[1]);
+        $new_src = $public_path . $file[1];
+        $body = str_replace($img[1], $new_src, $body);
+        continue;
+      }
+
+      if (strpos($img[1], 'innovationbyyou.com/sites/default/files') !== false) {
+        $file = explode('sites/default/files/', $img[1]);
+        $new_src = $public_path . $file[1];
+        $body = str_replace($img[1], $new_src, $body);
+        continue;
+      }
+
+      if (strpos($img[1], 'sites/default/files') !== false) {
+        $file = explode('sites/default/files/', $img[1]);
+        $new_src = $public_path . $file[1];
+        $body = str_replace($img[1], $new_src, $body);
+        continue;
+      }
+
+      if (strpos($img[1], 'sites/all/libraries/tinymce') !== false) {
+        $file = explode('sites/all/libraries/tinymce', $img[1]);
+        $new_src = $tinymce_path . $file[1];
+        $body = str_replace($img[1], $new_src, $body);
+        continue;
+      }
+
+    }
+  }
+
+  return $body;
+}/*}}}*/
+

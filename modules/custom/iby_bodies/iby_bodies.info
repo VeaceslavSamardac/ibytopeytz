@@ -1,0 +1,4 @@
+name = IBY Bodies
+description = Fix image paths in bodies
+package = Other
+core = 7.x
